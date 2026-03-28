@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.tournee.appel',
+  appId: 'com.cescom.lp',
   appName: 'CESCOM LP',
   webDir: 'dist'
 };
