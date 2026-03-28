@@ -109,18 +109,73 @@ export default function GlobalReport({
           title: 'Rapport d\'absences',
           text: `Rapport d'absences du ${formattedDate}`,
           url: savedFile.uri,
-          dialogTitle: 'Partager le rapport PDF',
+          dialogTitle: 'Enregistrer ou partager le rapport PDF',
         });
 
         toast.success('Export réussi', {
-          description: 'Le rapport PDF a été généré et partagé.',
+          description: 'Le rapport PDF a été généré.',
           icon: <Download className="w-4 h-4" />
         });
       } else {
         // Web fallback
+        const blob = doc.output('blob');
+        const file = new File([blob], fileName, { type: 'application/pdf' });
+
+        // Try to use the Web Share API if supported (mobile browsers)
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: 'Rapport d\'absences',
+              text: `Rapport d'absences du ${formattedDate}`,
+            });
+            toast.success('Export réussi', {
+              description: 'Le rapport PDF a été généré.',
+              icon: <Download className="w-4 h-4" />
+            });
+            return;
+          } catch (error) {
+            // If user cancels the share, it throws an AbortError. We can just return.
+            if (error instanceof Error && error.name === 'AbortError') {
+              return;
+            }
+            console.error("Erreur lors du partage:", error);
+            // Fallback to download if share fails for another reason
+          }
+        }
+
+        // Try to use the File System Access API (desktop Chrome/Edge)
+        if ('showSaveFilePicker' in window) {
+          try {
+            // @ts-ignore - showSaveFilePicker is not fully typed in standard TS yet
+            const handle = await window.showSaveFilePicker({
+              suggestedName: fileName,
+              types: [{
+                description: 'Document PDF',
+                accept: { 'application/pdf': ['.pdf'] },
+              }],
+            });
+            // @ts-ignore
+            const writable = await handle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+            toast.success('Export réussi', {
+              description: 'Le rapport PDF a été enregistré.',
+              icon: <Download className="w-4 h-4" />
+            });
+            return;
+          } catch (error) {
+            if (error instanceof Error && error.name === 'AbortError') {
+              return;
+            }
+            console.error("Erreur lors de l'enregistrement:", error);
+          }
+        }
+
+        // Ultimate fallback: standard download (a tag)
         doc.save(fileName);
         toast.success('Export réussi', {
-          description: 'Le rapport PDF a été généré et téléchargé.',
+          description: 'Le rapport PDF a été téléchargé.',
           icon: <Download className="w-4 h-4" />
         });
       }
