@@ -97,25 +97,32 @@ export default function GlobalReport({
         // Get base64 string of the PDF
         const pdfBase64 = doc.output('datauristring').split(',')[1];
         
-        // Save file to device
+        // Save file to device (Cache is always writable without extra permissions)
         const savedFile = await Filesystem.writeFile({
           path: fileName,
           data: pdfBase64,
-          directory: Directory.Documents,
+          directory: Directory.Cache,
         });
 
-        // Share the file
-        await Share.share({
-          title: 'Rapport d\'absences',
-          text: `Rapport d'absences du ${formattedDate}`,
-          url: savedFile.uri,
-          dialogTitle: 'Enregistrer ou partager le rapport PDF',
-        });
+        try {
+          // Share the file (this opens the native share sheet where the user can choose "Save to Files" / "Enregistrer dans les fichiers")
+          await Share.share({
+            title: 'Rapport d\'absences',
+            text: `Rapport d'absences du ${formattedDate}`,
+            url: savedFile.uri,
+            dialogTitle: 'Enregistrer ou partager le rapport PDF',
+          });
 
-        toast.success('Export réussi', {
-          description: 'Le rapport PDF a été généré.',
-          icon: <Download className="w-4 h-4" />
-        });
+          toast.success('Export réussi', {
+            description: 'Le rapport PDF a été généré.',
+            icon: <Download className="w-4 h-4" />
+          });
+        } catch (shareError: any) {
+          // If the user simply cancels the share sheet, it might throw an error. We can ignore it.
+          if (shareError?.message !== 'Share canceled') {
+            throw shareError;
+          }
+        }
       } else {
         // Web fallback
         const blob = doc.output('blob');
@@ -179,10 +186,10 @@ export default function GlobalReport({
           icon: <Download className="w-4 h-4" />
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur lors de l'export PDF:", error);
       toast.error('Erreur', {
-        description: "Impossible de générer le fichier PDF."
+        description: `Impossible de générer le fichier PDF: ${error?.message || 'Erreur inconnue'}`
       });
     }
   };
