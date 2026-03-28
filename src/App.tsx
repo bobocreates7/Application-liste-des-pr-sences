@@ -136,13 +136,12 @@ export default function App() {
     setSelectedClassId(null);
   };
 
-  const handleImportStudents = (newStudents: Student[], replace: boolean) => {
-    if (replace) {
-      setStudents(newStudents);
-      setAttendances([]); // Clear attendances to avoid orphaned records
-    } else {
-      setStudents(prev => [...prev, ...newStudents]);
-    }
+  const handleAddStudents = (newStudents: Student[]) => {
+    setStudents(prev => [...prev, ...newStudents]);
+  };
+
+  const handleDeleteStudent = (studentId: string) => {
+    setStudents(prev => prev.filter(s => s.id !== studentId));
   };
 
   return (
@@ -150,7 +149,9 @@ export default function App() {
       {showDataManagement && (
         <DataManagement 
           classes={classes}
-          onImport={handleImportStudents}
+          students={students}
+          onAddStudents={handleAddStudents}
+          onDeleteStudent={handleDeleteStudent}
           onClose={() => setShowDataManagement(false)}
         />
       )}

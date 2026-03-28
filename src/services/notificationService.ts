@@ -35,13 +35,13 @@ export const NotificationService = {
       for (let i = 0; i < 7; i++) {
         const scheduleDate = new Date();
         scheduleDate.setDate(scheduleDate.getDate() + i);
-        scheduleDate.setHours(16, 0, 0, 0);
+        scheduleDate.setHours(10, 0, 0, 0);
 
         // If it's today
         if (i === 0) {
           // Skip if all tasks are done today
           if (pendingCount <= 0) continue;
-          // Skip if it's already past 16:00 today
+          // Skip if it's already past 10:00 today
           if (now.getTime() > scheduleDate.getTime()) continue;
         }
 

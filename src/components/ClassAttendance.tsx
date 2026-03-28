@@ -23,12 +23,18 @@ export default function ClassAttendance({
   
   const absentCount = absents.length;
 
-  const filteredStudents = students.filter(student => {
-    const fullName = `${student.firstName} ${student.lastName}`.toLowerCase();
-    const reversedFullName = `${student.lastName} ${student.firstName}`.toLowerCase();
-    const searchLower = searchTerm.toLowerCase();
-    return fullName.includes(searchLower) || reversedFullName.includes(searchLower);
-  });
+  const filteredStudents = students
+    .filter(student => {
+      const fullName = `${student.firstName} ${student.lastName}`.toLowerCase();
+      const reversedFullName = `${student.lastName} ${student.firstName}`.toLowerCase();
+      const searchLower = searchTerm.toLowerCase();
+      return fullName.includes(searchLower) || reversedFullName.includes(searchLower);
+    })
+    .sort((a, b) => {
+      const lastNameCompare = a.lastName.localeCompare(b.lastName);
+      if (lastNameCompare !== 0) return lastNameCompare;
+      return a.firstName.localeCompare(b.firstName);
+    });
 
   return (
     <div className="flex flex-col h-screen max-w-md mx-auto bg-gray-50 shadow-xl overflow-hidden relative">

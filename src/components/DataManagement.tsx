@@ -1,11 +1,13 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Class, Student } from '../types';
-import { Upload, X, Download, Users, AlertTriangle } from 'lucide-react';
+import { X, Users, Plus, Trash2, ClipboardPaste } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface DataManagementProps {
   classes: Class[];
-  onImport: (students: Student[], replace: boolean) => void;
+  students: Student[];
+  onAddStudents: (students: Student[]) => void;
+  onDeleteStudent: (studentId: string) => void;
   onClose: () => void;
 }
 
@@ -15,88 +17,65 @@ const generateId = () => {
     : Math.random().toString(36).substring(2, 15);
 };
 
-const normalizeStr = (str: string) => {
-  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-};
+export default function DataManagement({ classes, students, onAddStudents, onDeleteStudent, onClose }: DataManagementProps) {
+  const [selectedClassId, setSelectedClassId] = useState<string>(classes[0]?.id || '');
+  const [bulkText, setBulkText] = useState('');
 
-export default function DataManagement({ classes, onImport, onClose }: DataManagementProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [replace, setReplace] = useState(false);
+  const classStudents = students
+    .filter(s => s.classId === selectedClassId)
+    .sort((a, b) => {
+      const lastNameCompare = a.lastName.localeCompare(b.lastName);
+      if (lastNameCompare !== 0) return lastNameCompare;
+      return a.firstName.localeCompare(b.firstName);
+    });
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const handleBulkAdd = () => {
+    if (!selectedClassId) {
+      toast.error("Veuillez sélectionner une classe.");
+      return;
+    }
+    if (!bulkText.trim()) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      // Remove BOM if present
-      const text = (e.target?.result as string).replace(/^\uFEFF/, '');
-      const lines = text.split(/\r?\n/);
-      const newStudents: Student[] = [];
-      let errorCount = 0;
+    const lines = bulkText.split('\n');
+    const newStudents: Student[] = [];
 
-      lines.forEach((line, index) => {
-        if (!line.trim()) return; 
-        
-        // Split by comma, semicolon, or tab, and remove surrounding quotes
-        const parts = line.split(/[,;\t]/).map(s => s.replace(/^["']|["']$/g, '').trim());
-        
-        // Skip header
-        if (index === 0 && parts[0].toLowerCase().includes('nom')) return;
-        
-        if (parts.length >= 3) {
-          const lastName = parts[0];
-          const firstName = parts[1];
-          const className = parts[2];
-          
-          const matchedClass = classes.find(c => normalizeStr(c.name) === normalizeStr(className));
-          
-          if (matchedClass && lastName && firstName) {
-            newStudents.push({
-              id: generateId(),
-              lastName,
-              firstName,
-              classId: matchedClass.id
-            });
-          } else {
-            console.warn("Ligne ignorée :", line, "- Classe trouvée :", !!matchedClass);
-            errorCount++;
-          }
-        } else {
-          errorCount++;
-        }
-      });
-
-      if (newStudents.length > 0) {
-        onImport(newStudents, replace);
-        toast.success(`${newStudents.length} élèves importés avec succès.`);
-        if (errorCount > 0) {
-          toast.warning(`${errorCount} lignes ignorées (classe introuvable ou format invalide).`);
-        }
-        onClose();
-      } else {
-        toast.error("Aucun élève n'a pu être importé. Vérifiez le format (Nom, Prénom, Classe).");
+    lines.forEach(line => {
+      const cleanLine = line.trim();
+      if (!cleanLine) return;
+      
+      // Séparer par tabulation, point-virgule, virgule ou espace
+      let parts = cleanLine.split(/[\t;,]/);
+      if (parts.length === 1) {
+         const spaceIndex = cleanLine.indexOf(' ');
+         if (spaceIndex > -1) {
+           parts = [cleanLine.substring(0, spaceIndex), cleanLine.substring(spaceIndex + 1)];
+         } else {
+           parts = [cleanLine];
+         }
       }
-    };
-    reader.readAsText(file);
-  };
+      
+      const lastName = parts[0].trim().toUpperCase();
+      const firstName = parts.length > 1 ? parts[1].trim() : '';
+      
+      newStudents.push({
+        id: generateId(),
+        lastName,
+        firstName: firstName ? firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase() : '',
+        classId: selectedClassId
+      });
+    });
 
-  const downloadTemplate = () => {
-    const csvContent = "Nom,Prénom,Classe\nDupont,Jean,1ère IG\nMartin,Sophie,2ème CT";
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'modele_eleves.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (newStudents.length > 0) {
+      onAddStudents(newStudents);
+      setBulkText('');
+      toast.success(`${newStudents.length} élève(s) ajouté(s) avec succès.`);
+    }
   };
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="p-6 border-b border-gray-100 flex justify-between items-center shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
               <Users className="w-5 h-5" />
@@ -108,54 +87,82 @@ export default function DataManagement({ classes, onImport, onClose }: DataManag
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
-          <div className="space-y-4">
-            <p className="text-sm text-gray-600">
-              Importez une liste d'élèves depuis un fichier CSV. Le fichier doit contenir les colonnes : <strong>Nom, Prénom, Classe</strong>.
-            </p>
-            
-            <button 
-              onClick={downloadTemplate}
-              className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
+        <div className="flex flex-col md:flex-row flex-1 overflow-y-auto md:overflow-hidden">
+          {/* Left side: Add students */}
+          <div className="p-6 border-b md:border-b-0 md:border-r border-gray-100 md:w-1/2 flex flex-col gap-4 shrink-0 md:overflow-y-auto">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Classe</label>
+              <select 
+                value={selectedClassId}
+                onChange={(e) => setSelectedClassId(e.target.value)}
+                className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+              >
+                {classes.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex-1 flex flex-col">
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                <ClipboardPaste className="w-4 h-4" />
+                Coller une liste
+              </label>
+              <p className="text-xs text-gray-500 mb-2">
+                Copiez-collez depuis Excel ou Pronote. Format : Nom Prénom (un par ligne).
+              </p>
+              <textarea
+                value={bulkText}
+                onChange={(e) => setBulkText(e.target.value)}
+                placeholder="DUPONT Jean&#10;MARTIN Sophie"
+                className="w-full flex-1 min-h-[200px] border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+              />
+            </div>
+
+            <button
+              onClick={handleBulkAdd}
+              disabled={!bulkText.trim() || !selectedClassId}
+              className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 px-4 rounded-xl font-medium transition-colors mt-2"
             >
-              <Download className="w-4 h-4" />
-              Télécharger un modèle CSV
+              <Plus className="w-5 h-5" />
+              Ajouter à la classe
             </button>
           </div>
 
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-amber-900 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  checked={replace}
-                  onChange={(e) => setReplace(e.target.checked)}
-                  className="rounded border-amber-300 text-amber-600 focus:ring-amber-500"
-                />
-                Remplacer la liste existante
-              </label>
-              <p className="text-xs text-amber-700">
-                Si coché, tous les élèves actuels et l'historique des appels seront supprimés avant l'import.
-              </p>
+          {/* Right side: Current students */}
+          <div className="p-6 md:w-1/2 flex flex-col bg-gray-50 md:overflow-hidden">
+            <h3 className="text-sm font-medium text-gray-700 mb-3 flex justify-between items-center shrink-0">
+              <span>Élèves dans cette classe</span>
+              <span className="bg-blue-100 text-blue-700 py-0.5 px-2 rounded-full text-xs font-bold">
+                {classStudents.length}
+              </span>
+            </h3>
+            
+            <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+              {classStudents.length === 0 ? (
+                <div className="text-center py-10 text-gray-400 text-sm bg-white rounded-xl border border-dashed border-gray-200">
+                  Aucun élève dans cette classe.
+                  <br />
+                  <span className="text-xs mt-1 block">Utilisez le formulaire pour en ajouter.</span>
+                </div>
+              ) : (
+                classStudents.map(student => (
+                  <div key={student.id} className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                    <span className="font-medium text-gray-900 text-sm">
+                      {student.lastName} <span className="text-gray-600 font-normal">{student.firstName}</span>
+                    </span>
+                    <button 
+                      onClick={() => onDeleteStudent(student.id)}
+                      className="text-gray-400 hover:text-red-500 p-1.5 rounded-md hover:bg-red-50 transition-colors"
+                      title="Supprimer l'élève"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
           </div>
-
-          <input 
-            type="file" 
-            accept=".csv" 
-            ref={fileInputRef} 
-            onChange={handleFileUpload} 
-            className="hidden" 
-          />
-
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-medium transition-colors"
-          >
-            <Upload className="w-5 h-5" />
-            Sélectionner un fichier CSV
-          </button>
         </div>
       </div>
     </div>

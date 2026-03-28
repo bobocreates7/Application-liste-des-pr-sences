@@ -39,10 +39,12 @@ export default function GlobalReport({
     });
   }).filter(detail => detail.student); // Remove any undefined students
 
-  // Sort by class name, then student last name
+  // Sort by class name, then student last name, then first name
   absentDetails.sort((a, b) => {
     if (a.className !== b.className) return a.className.localeCompare(b.className);
-    return a.student!.lastName.localeCompare(b.student!.lastName);
+    const lastNameCompare = a.student!.lastName.localeCompare(b.student!.lastName);
+    if (lastNameCompare !== 0) return lastNameCompare;
+    return a.student!.firstName.localeCompare(b.student!.firstName);
   });
 
   const formattedDate = new Date(currentDate).toLocaleDateString('fr-FR', {
