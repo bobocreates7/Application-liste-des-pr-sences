@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, MapPin, CheckCircle2, Circle, Calendar as CalendarIcon, FileBarChart } from 'lucide-react';
+import { Search, MapPin, CheckCircle2, Circle, Calendar as CalendarIcon, FileBarChart, Users } from 'lucide-react';
 import { Class, DailyAttendance } from '../types';
 
 interface DashboardProps {
@@ -9,6 +9,7 @@ interface DashboardProps {
   onDateChange: (date: string) => void;
   onSelectClass: (id: string) => void;
   onOpenReport: () => void;
+  onOpenDataManagement: () => void;
 }
 
 export default function Dashboard({ 
@@ -17,7 +18,8 @@ export default function Dashboard({
   currentDate, 
   onDateChange, 
   onSelectClass,
-  onOpenReport
+  onOpenReport,
+  onOpenDataManagement
 }: DashboardProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'todo' | 'done'>('all');
@@ -43,13 +45,23 @@ export default function Dashboard({
       <header className="bg-[#1A73E8] text-white p-6 shadow-md z-10 sticky top-0">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold tracking-tight">Tournée d'Appel</h1>
-          <button 
-            onClick={onOpenReport}
-            className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors flex items-center gap-2 text-sm font-medium"
-          >
-            <FileBarChart className="w-4 h-4" />
-            Rapport
-          </button>
+          <div className="flex gap-2">
+            <button 
+              onClick={onOpenDataManagement}
+              className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors flex items-center gap-2 text-sm font-medium"
+              title="Gérer les élèves"
+            >
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">Élèves</span>
+            </button>
+            <button 
+              onClick={onOpenReport}
+              className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors flex items-center gap-2 text-sm font-medium"
+            >
+              <FileBarChart className="w-4 h-4" />
+              <span className="hidden sm:inline">Rapport</span>
+            </button>
+          </div>
         </div>
         
         {/* Date Selector */}

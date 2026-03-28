@@ -1,6 +1,5 @@
 {
 	"appId": "com.tournee.appel",
 	"appName": "Tournee Appel",
-	"webDir": "dist",
-	"bundledWebRuntime": false
+	"webDir": "dist"
 }

@@ -10,6 +10,8 @@ import { initialClasses, initialStudents, initialAttendances } from './data';
 import Dashboard from './components/Dashboard';
 import ClassAttendance from './components/ClassAttendance';
 import GlobalReport from './components/GlobalReport';
+import DataManagement from './components/DataManagement';
+import { NotificationService } from './services/notificationService';
 
 export default function App() {
   const [classes, setClasses] = useState<Class[]>([]);
@@ -19,19 +21,20 @@ export default function App() {
   const [currentDate, setCurrentDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
+  const [showDataManagement, setShowDataManagement] = useState(false);
 
   // Load from localStorage on mount
   useEffect(() => {
-    const storedClasses = localStorage.getItem('app_classes');
     const storedStudents = localStorage.getItem('app_students');
     const storedAttendances = localStorage.getItem('app_attendances');
 
-    if (storedClasses && storedStudents) {
-      setClasses(JSON.parse(storedClasses));
+    // Always use the latest classes from data.ts
+    setClasses(initialClasses);
+
+    if (storedStudents) {
       setStudents(JSON.parse(storedStudents));
       if (storedAttendances) setAttendances(JSON.parse(storedAttendances));
     } else {
-      setClasses(initialClasses);
       setStudents(initialStudents);
       setAttendances(initialAttendances);
     }
@@ -39,12 +42,20 @@ export default function App() {
 
   // Save to localStorage when state changes
   useEffect(() => {
-    if (classes.length > 0) {
-      localStorage.setItem('app_classes', JSON.stringify(classes));
-      localStorage.setItem('app_students', JSON.stringify(students));
-      localStorage.setItem('app_attendances', JSON.stringify(attendances));
-    }
-  }, [classes, students, attendances]);
+    localStorage.setItem('app_students', JSON.stringify(students));
+    localStorage.setItem('app_attendances', JSON.stringify(attendances));
+  }, [students, attendances]);
+
+  // Schedule notifications for overdue tasks
+  useEffect(() => {
+    if (classes.length === 0) return;
+    
+    const today = new Date().toISOString().split('T')[0];
+    const completedToday = attendances.filter(a => a.date === today && a.isDone);
+    const pendingCount = classes.length - completedToday.length;
+    
+    NotificationService.scheduleOverdueReminder(pendingCount);
+  }, [classes, attendances]);
 
   const handleSelectClass = (classId: string) => {
     setSelectedClassId(classId);
@@ -125,8 +136,24 @@ export default function App() {
     setSelectedClassId(null);
   };
 
+  const handleImportStudents = (newStudents: Student[], replace: boolean) => {
+    if (replace) {
+      setStudents(newStudents);
+      setAttendances([]); // Clear attendances to avoid orphaned records
+    } else {
+      setStudents(prev => [...prev, ...newStudents]);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 text-gray-900 font-sans selection:bg-[#1A73E8] selection:text-white">
+      {showDataManagement && (
+        <DataManagement 
+          classes={classes}
+          onImport={handleImportStudents}
+          onClose={() => setShowDataManagement(false)}
+        />
+      )}
       {showReport ? (
         <GlobalReport 
           currentDate={currentDate}
@@ -152,6 +179,7 @@ export default function App() {
           onDateChange={setCurrentDate}
           onSelectClass={handleSelectClass} 
           onOpenReport={() => setShowReport(true)}
+          onOpenDataManagement={() => setShowDataManagement(true)}
         />
       )}
       <Toaster position="top-center" />
