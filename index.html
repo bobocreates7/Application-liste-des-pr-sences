@@ -11,23 +11,9 @@
   </head>
   <body>
     <div id="root"></div>
-    <div id="splash-footer" style="position: fixed; bottom: 20px; width: 100%; text-align: center; color: #666; font-size: 14px; font-family: sans-serif; z-index: 9999; pointer-events: none;">
-      Développé par M. Aimé-Bonus
-    </div>
+
     <script type="module" src="/src/main.tsx"></script>
-    <script>
-      // Hide the splash footer once the app is mounted
-      window.addEventListener('load', () => {
-        setTimeout(() => {
-          const footer = document.getElementById('splash-footer');
-          if (footer) {
-            footer.style.opacity = '0';
-            footer.style.transition = 'opacity 0.5s ease';
-            setTimeout(() => footer.remove(), 500);
-          }
-        }, 1500); // Give it a little time so it's visible during initial load
-      });
-    </script>
+  
   </body>
 </html>
 
