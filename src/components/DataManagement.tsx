@@ -73,29 +73,29 @@ export default function DataManagement({ classes, students, onAddStudents, onDel
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 z-50">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-              <Users className="w-5 h-5" />
+        <div className="p-4 border-b border-gray-100 flex justify-between items-center shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
+              <Users className="w-4 h-4" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900">Gérer les élèves</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Gérer les élèves</h2>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-            <X className="w-6 h-6" />
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors p-1">
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="flex flex-col md:flex-row flex-1 overflow-y-auto md:overflow-hidden">
           {/* Left side: Add students */}
-          <div className="p-6 border-b md:border-b-0 md:border-r border-gray-100 md:w-1/2 flex flex-col gap-4 shrink-0 md:overflow-y-auto">
+          <div className="p-4 border-b md:border-b-0 md:border-r border-gray-100 md:w-1/2 flex flex-col gap-3 shrink-0 md:overflow-y-auto">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Classe</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Classe</label>
               <select 
                 value={selectedClassId}
                 onChange={(e) => setSelectedClassId(e.target.value)}
-                className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                className="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
               >
                 {classes.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
@@ -104,50 +104,50 @@ export default function DataManagement({ classes, students, onAddStudents, onDel
             </div>
 
             <div className="flex-1 flex flex-col">
-              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
-                <ClipboardPaste className="w-4 h-4" />
+              <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1.5">
+                <ClipboardPaste className="w-3.5 h-3.5" />
                 Coller une liste
               </label>
-              <p className="text-xs text-gray-500 mb-2">
+              <p className="text-[11px] text-gray-500 mb-2">
                 Copiez-collez depuis Excel ou Pronote. Format : Nom Prénom (un par ligne).
               </p>
               <textarea
                 value={bulkText}
                 onChange={(e) => setBulkText(e.target.value)}
                 placeholder="DUPONT Jean&#10;MARTIN Sophie"
-                className="w-full flex-1 min-h-[200px] border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                className="w-full flex-1 min-h-[150px] border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
               />
             </div>
 
             <button
               onClick={handleBulkAdd}
               disabled={!bulkText.trim() || !selectedClassId}
-              className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 px-4 rounded-xl font-medium transition-colors mt-2"
+              className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-2.5 px-4 rounded-xl text-sm font-medium transition-colors mt-1"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4" />
               Ajouter à la classe
             </button>
           </div>
 
           {/* Right side: Current students */}
-          <div className="p-6 md:w-1/2 flex flex-col bg-gray-50 md:overflow-hidden">
-            <h3 className="text-sm font-medium text-gray-700 mb-3 flex justify-between items-center shrink-0">
+          <div className="p-4 md:w-1/2 flex flex-col bg-gray-50 md:overflow-hidden">
+            <h3 className="text-xs font-medium text-gray-700 mb-2.5 flex justify-between items-center shrink-0">
               <span>Élèves dans cette classe</span>
-              <span className="bg-blue-100 text-blue-700 py-0.5 px-2 rounded-full text-xs font-bold">
+              <span className="bg-blue-100 text-blue-700 py-0.5 px-2 rounded-full text-[10px] font-bold">
                 {classStudents.length}
               </span>
             </h3>
             
-            <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+            <div className="flex-1 overflow-y-auto space-y-1.5 pr-1">
               {classStudents.length === 0 ? (
-                <div className="text-center py-10 text-gray-400 text-sm bg-white rounded-xl border border-dashed border-gray-200">
+                <div className="text-center py-8 text-gray-400 text-xs bg-white rounded-xl border border-dashed border-gray-200">
                   Aucun élève dans cette classe.
                   <br />
-                  <span className="text-xs mt-1 block">Utilisez le formulaire pour en ajouter.</span>
+                  <span className="text-[10px] mt-1 block">Utilisez le formulaire pour en ajouter.</span>
                 </div>
               ) : (
                 classStudents.map(student => (
-                  <div key={student.id} className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                  <div key={student.id} className="flex items-center justify-between bg-white p-2.5 rounded-lg border border-gray-100 shadow-sm">
                     <span className="font-medium text-gray-900 text-sm">
                       {student.lastName} <span className="text-gray-600 font-normal">{student.firstName}</span>
                     </span>
@@ -156,7 +156,7 @@ export default function DataManagement({ classes, students, onAddStudents, onDel
                       className="text-gray-400 hover:text-red-500 p-1.5 rounded-md hover:bg-red-50 transition-colors"
                       title="Supprimer l'élève"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))

@@ -5,6 +5,8 @@
 
 import { useState, useEffect } from 'react';
 import { Toaster, toast } from 'sonner';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { Capacitor } from '@capacitor/core';
 import { Class, Student, DailyAttendance, AbsenceReason } from './types';
 import { initialClasses, initialStudents, initialAttendances } from './data';
 import Dashboard from './components/Dashboard';
@@ -22,6 +24,15 @@ export default function App() {
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
   const [showDataManagement, setShowDataManagement] = useState(false);
+
+  // Initialize StatusBar
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      StatusBar.setStyle({ style: Style.Dark });
+      StatusBar.setBackgroundColor({ color: '#1A73E8' });
+      StatusBar.setOverlaysWebView({ overlay: false });
+    }
+  }, []);
 
   // Load from localStorage on mount
   useEffect(() => {
