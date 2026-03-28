@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Tournee Appel</string>
-    <string name="title_activity_main">Tournee Appel</string>
+    <string name="app_name">Liste de présence</string>
+    <string name="title_activity_main">liste de présence</string>
     <string name="package_name">com.tournee.appel</string>
     <string name="custom_url_scheme">com.tournee.appel</string>
 </resources>
