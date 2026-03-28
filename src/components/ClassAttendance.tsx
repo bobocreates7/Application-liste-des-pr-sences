@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { ArrowLeft, Check, Search, ChevronDown } from 'lucide-react';
-import { Class, Student, AbsentRecord, AbsenceReason } from '../types';
+import { ArrowLeft, Check, Search } from 'lucide-react';
+import { Class, Student, AbsentRecord } from '../types';
 
 interface ClassAttendanceProps {
   classData: Class;
   students: Student[];
   absents: AbsentRecord[];
   onBack: () => void;
-  onUpdateStatus: (studentId: string, isAbsent: boolean, reason?: AbsenceReason) => void;
+  onUpdateStatus: (studentId: string, isAbsent: boolean) => void;
   onValidate: (classId: string) => void;
 }
 
@@ -52,7 +52,7 @@ export default function ClassAttendance({
       </header>
 
       {/* Student List */}
-      <main className="flex-1 overflow-y-auto pb-32">
+      <main className="flex-1 overflow-y-auto pb-64">
         <div className="p-3 bg-gray-50 sticky top-0 z-10">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -98,7 +98,7 @@ export default function ClassAttendance({
                         P
                       </button>
                       <button
-                        onClick={() => onUpdateStatus(student.id, true, 'Inconnu')}
+                        onClick={() => onUpdateStatus(student.id, true)}
                         className={`w-11 h-11 rounded-xl flex items-center justify-center text-base font-bold transition-all ${
                           isAbsent 
                             ? 'bg-[#E53935] text-white shadow-md scale-105' 
@@ -109,27 +109,6 @@ export default function ClassAttendance({
                       </button>
                     </div>
                   </div>
-
-                  {/* Reason Selector (only visible if absent) */}
-                  {isAbsent && (
-                    <div className="pl-3 border-l-2 border-[#E53935] ml-1.5 mt-1 py-1 animate-in slide-in-from-top-2 fade-in duration-200">
-                      <label className="text-xs text-gray-500 mb-1 block">Motif de l'absence :</label>
-                      <div className="relative">
-                        <select
-                          value={absentRecord.reason || 'Inconnu'}
-                          onChange={(e) => onUpdateStatus(student.id, true, e.target.value as AbsenceReason)}
-                          className="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-700 py-1.5 px-2.5 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E53935]/50 focus:border-[#E53935] text-sm"
-                        >
-                          <option value="Inconnu">Inconnu</option>
-                          <option value="Maladie">Maladie</option>
-                          <option value="Transport">Transport</option>
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                          <ChevronDown className="w-3.5 h-3.5" />
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
               );
             })

@@ -36,8 +36,7 @@ export default function GlobalReport({
       const studentInfo = students.find(s => s.id === absent.studentId);
       return {
         student: studentInfo,
-        className: classInfo?.name || 'Inconnue',
-        reason: absent.reason
+        className: classInfo?.name || 'Inconnue'
       };
     });
   }).filter(detail => detail.student); // Remove any undefined students
@@ -79,14 +78,13 @@ export default function GlobalReport({
       // Table Data
       const tableData = absentDetails.map(detail => [
         `${detail.student!.lastName.toUpperCase()} ${detail.student!.firstName}`,
-        detail.className,
-        detail.reason || 'Non renseigné'
+        detail.className
       ]);
 
       // Generate Table
       autoTable(doc, {
         startY: 50,
-        head: [['Élève', 'Classe', 'Motif']],
+        head: [['Élève', 'Classe']],
         body: tableData,
         theme: 'striped',
         headStyles: { fillColor: [26, 115, 232] },
@@ -180,9 +178,6 @@ export default function GlobalReport({
                       {detail.className}
                     </span>
                   </div>
-                  <p className="text-xs text-[#E53935] font-medium flex items-center gap-1 mt-0.5">
-                    Motif : {detail.reason || 'Non renseigné'}
-                  </p>
                 </div>
               ))}
             </div>

@@ -2,7 +2,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.tournee.appel',
-  appName: 'Tournee Appel',
+  appName: 'liste de présence',
   webDir: 'dist'
 };
 

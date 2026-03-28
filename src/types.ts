@@ -11,11 +11,8 @@ export interface Student {
   classId: string;
 }
 
-export type AbsenceReason = 'Maladie' | 'Transport' | 'Inconnu' | null;
-
 export interface AbsentRecord {
   studentId: string;
-  reason: AbsenceReason;
 }
 
 export interface DailyAttendance {

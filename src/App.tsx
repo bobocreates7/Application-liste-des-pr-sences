@@ -7,7 +7,8 @@ import { useState, useEffect } from 'react';
 import { Toaster, toast } from 'sonner';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
-import { Class, Student, DailyAttendance, AbsenceReason } from './types';
+import { App as CapacitorApp } from '@capacitor/app';
+import { Class, Student, DailyAttendance } from './types';
 import { initialClasses, initialStudents, initialAttendances } from './data';
 import Dashboard from './components/Dashboard';
 import ClassAttendance from './components/ClassAttendance';
@@ -25,14 +26,32 @@ export default function App() {
   const [showReport, setShowReport] = useState(false);
   const [showDataManagement, setShowDataManagement] = useState(false);
 
-  // Initialize StatusBar
+  // Initialize StatusBar and BackButton
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
       StatusBar.setStyle({ style: Style.Dark });
       StatusBar.setBackgroundColor({ color: '#1A73E8' });
       StatusBar.setOverlaysWebView({ overlay: false });
+
+      CapacitorApp.addListener('backButton', () => {
+        if (showDataManagement) {
+          setShowDataManagement(false);
+        } else if (showReport) {
+          setShowReport(false);
+        } else if (selectedClassId) {
+          setSelectedClassId(null);
+        } else {
+          CapacitorApp.exitApp();
+        }
+      });
     }
-  }, []);
+
+    return () => {
+      if (Capacitor.isNativePlatform()) {
+        CapacitorApp.removeAllListeners();
+      }
+    };
+  }, [showDataManagement, showReport, selectedClassId]);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -84,7 +103,7 @@ export default function App() {
     absents: []
   };
 
-  const handleUpdateStudentStatus = (studentId: string, isAbsent: boolean, reason?: AbsenceReason) => {
+  const handleUpdateStudentStatus = (studentId: string, isAbsent: boolean) => {
     if (!selectedClassId) return;
 
     setAttendances(prev => {
@@ -96,9 +115,9 @@ export default function App() {
         // Add or update absent record
         const existingAbsentIndex = newAbsents.findIndex(a => a.studentId === studentId);
         if (existingAbsentIndex >= 0) {
-          newAbsents[existingAbsentIndex] = { studentId, reason: reason || 'Inconnu' };
+          newAbsents[existingAbsentIndex] = { studentId };
         } else {
-          newAbsents.push({ studentId, reason: reason || 'Inconnu' });
+          newAbsents.push({ studentId });
         }
       } else {
         // Remove absent record
