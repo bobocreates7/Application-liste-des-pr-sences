@@ -56,7 +56,6 @@ export const NotificationService = {
           attachments: undefined,
           actionTypeId: '',
           extra: null
-     smallIcon:'res://ic_notification'
         });
       }
 
