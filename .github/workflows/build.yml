@@ -18,6 +18,9 @@ jobs:
       - name: Installation des dépendances
         run: npm install
         
+      - name: Génération des ressources (Icônes et Splash)
+        run: npx @capacitor/assets generate --android
+        
       - name: Construction de l'app web
         run: npm run build
         
@@ -33,10 +36,10 @@ jobs:
       - name: Compilation de l'APK
         run: |
           cd android
-          gradle assembleDebug
+          ./gradlew assembleDebug
           
       - name: Sauvegarde de l'APK
         uses: actions/upload-artifact@v4
         with:
-          name: CESCOM LP 
+          name: CESCOM LP
           path: android/app/build/outputs/apk/debug/app-debug.apk
