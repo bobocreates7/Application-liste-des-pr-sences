@@ -36,6 +36,7 @@ jobs:
       - name: Compilation de l'APK
         run: |
           cd android
+          chmod +x gradlew
           ./gradlew assembleDebug
           
       - name: Sauvegarde de l'APK
