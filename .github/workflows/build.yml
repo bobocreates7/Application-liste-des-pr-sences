@@ -32,6 +32,10 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '21'
+
+      # CETTE ÉTAPE RÉPARE GRADLE 👇
+      - name: Validation du Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v3
           
       - name: Compilation de l'APK
         run: |
