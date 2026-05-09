@@ -18,7 +18,7 @@ jobs:
       - name: Installation des dépendances
         run: npm install
         
-      - name: Génération des ressources (Icônes et Splash)
+      - name: Génération des ressources
         run: npx @capacitor/assets generate --android
         
       - name: Construction de l'app web
@@ -33,12 +33,17 @@ jobs:
           distribution: 'zulu'
           java-version: '21'
 
-      - name: Configuration de Gradle
+      - name: Configuration de Gradle (sans blocage)
         uses: gradle/actions/setup-gradle@v4
+        with:
+          validate-wrappers: false
 
-      - name: Compilation de l'APK
+      - name: Nettoyage et Compilation de l'APK
         run: |
           cd android
+          rm -f gradle/wrapper/gradle-wrapper.jar
+          gradle wrapper
+          chmod +x gradlew
           ./gradlew assembleDebug
           
       - name: Sauvegarde de l'APK
