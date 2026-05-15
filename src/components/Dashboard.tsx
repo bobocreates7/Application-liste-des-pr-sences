@@ -4,8 +4,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Class, DailyAttendance } from '../types';
 
 let dashboardScrollPos = 0;
-let initialSearchTerm = '';
-let initialFilter: 'all' | 'todo' | 'done' = 'all';
+// We removed initialSearchTerm and initialFilter as they are now in App.tsx
 
 interface DashboardProps {
   classes: Class[];
@@ -15,6 +14,10 @@ interface DashboardProps {
   onSelectClass: (id: string) => void;
   onOpenReport: () => void;
   onOpenDataManagement: () => void;
+  filter: 'all' | 'todo' | 'done';
+  setFilter: (f: 'all' | 'todo' | 'done') => void;
+  searchTerm: string;
+  setSearchTerm: (s: string) => void;
 }
 
 export default function Dashboard({ 
@@ -24,10 +27,12 @@ export default function Dashboard({
   onDateChange, 
   onSelectClass,
   onOpenReport,
-  onOpenDataManagement
+  onOpenDataManagement,
+  filter,
+  setFilter,
+  searchTerm,
+  setSearchTerm
 }: DashboardProps) {
-  const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
-  const [filter, setFilter] = useState<'all' | 'todo' | 'done'>(initialFilter);
   const [showNotifications, setShowNotifications] = useState(false);
 
   const classesWithStatus = classes.map(c => {
@@ -42,14 +47,10 @@ export default function Dashboard({
   const recentWorkingDays = useMemo(() => {
     const dates = [];
     let d = new Date();
-    let count = 0;
-    while (dates.length < 5 && count < 20) {
-      const dayOfWeek = d.getDay();
-      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-        dates.push(d.toISOString().split('T')[0]);
-      }
-      d.setDate(d.getDate() - 1);
-      count++;
+    // Only check today
+    const dayOfWeek = d.getDay();
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      dates.push(d.toISOString().split('T')[0]);
     }
     return dates;
   }, []);
@@ -96,14 +97,6 @@ export default function Dashboard({
   const handleScroll = (e: React.UIEvent<HTMLElement>) => {
     dashboardScrollPos = e.currentTarget.scrollTop;
   };
-
-  useLayoutEffect(() => {
-    initialSearchTerm = searchTerm;
-  }, [searchTerm]);
-
-  useLayoutEffect(() => {
-    initialFilter = filter;
-  }, [filter]);
 
   const missedDaysCount = notificationItems.filter(item => !item.isComplete).length;
 

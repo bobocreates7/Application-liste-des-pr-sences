@@ -1,4 +1,4 @@
-package com.tournee.appel;
+package com.cescom.lp;
 
 import com.getcapacitor.BridgeActivity;
 

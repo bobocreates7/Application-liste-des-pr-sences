@@ -29,6 +29,17 @@ export const NotificationService = {
       // Cancel previous reminders (IDs 1 to 7)
       await this.cancelReminders();
 
+      // Create a notification channel for Android 8+
+      if (Capacitor.getPlatform() === 'android') {
+        await LocalNotifications.createChannel({
+          id: 'reminders',
+          name: 'Rappels',
+          description: 'Rappels pour la validation des présences',
+          importance: 5, // High importance (heads up + sound)
+          visibility: 1, // Public
+        });
+      }
+
       const notifications = [];
       const now = new Date();
 
@@ -52,7 +63,8 @@ export const NotificationService = {
             : `N'oubliez pas de valider vos appels aujourd'hui.`,
           id: i + 1,
           schedule: { at: scheduleDate },
-          sound: undefined,
+          sound: null,
+          channelId: 'reminders',
           attachments: undefined,
           actionTypeId: '',
           extra: null

@@ -1,8 +1,8 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.tournee.appel',
-  appName: 'liste de présence',
+  appId: 'com.cescom.lp',
+  appName: 'CESCOM LP',
   webDir: 'dist',
   plugins: {
     SplashScreen: {

@@ -27,6 +27,8 @@ export default function App() {
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
   const [showDataManagement, setShowDataManagement] = useState(false);
+  const [filter, setFilter] = useState<'all' | 'todo' | 'done'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Initialize StatusBar and BackButton
   useEffect(() => {
@@ -47,6 +49,10 @@ export default function App() {
           setShowReport(false);
         } else if (selectedClassId) {
           setSelectedClassId(null);
+        } else if (filter !== 'all') {
+          setFilter('all');
+        } else if (searchTerm !== '') {
+          setSearchTerm('');
         } else {
           CapacitorApp.exitApp();
         }
@@ -58,7 +64,7 @@ export default function App() {
         CapacitorApp.removeAllListeners();
       }
     };
-  }, [showDataManagement, showReport, selectedClassId]);
+  }, [showDataManagement, showReport, selectedClassId, filter, searchTerm]);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -239,6 +245,10 @@ export default function App() {
               onSelectClass={handleSelectClass} 
               onOpenReport={() => setShowReport(true)}
               onOpenDataManagement={() => setShowDataManagement(true)}
+              filter={filter}
+              setFilter={setFilter}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
             />
           </motion.div>
         )}
