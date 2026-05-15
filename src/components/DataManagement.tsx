@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import { Class, Student } from '../types';
 import { X, Users, Plus, Trash2, ClipboardPaste } from 'lucide-react';
 import { toast } from 'sonner';
@@ -74,7 +75,12 @@ export default function DataManagement({ classes, students, onAddStudents, onDel
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 z-50">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: "spring", duration: 0.4, bounce: 0.15 }}
+        className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden"
+      >
         <div className="p-4 border-b border-gray-100 flex justify-between items-center shrink-0">
           <div className="flex items-center gap-2">
             <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
@@ -164,7 +170,7 @@ export default function DataManagement({ classes, students, onAddStudents, onDel
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

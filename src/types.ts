@@ -20,5 +20,6 @@ export interface DailyAttendance {
   classId: string;
   isDone: boolean;
   absents: AbsentRecord[];
+  completedAt?: string;
 }
 

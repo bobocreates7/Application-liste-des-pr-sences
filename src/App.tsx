@@ -8,6 +8,8 @@ import { Toaster, toast } from 'sonner';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
+import { SplashScreen } from '@capacitor/splash-screen';
+import { AnimatePresence, motion } from 'motion/react';
 import { Class, Student, DailyAttendance } from './types';
 import { initialClasses, initialStudents, initialAttendances } from './data';
 import Dashboard from './components/Dashboard';
@@ -32,6 +34,11 @@ export default function App() {
       StatusBar.setStyle({ style: Style.Dark });
       StatusBar.setBackgroundColor({ color: '#1A73E8' });
       StatusBar.setOverlaysWebView({ overlay: false });
+
+      // Ensure splash screen stays for at least 3 seconds
+      setTimeout(() => {
+        SplashScreen.hide();
+      }, 3000);
 
       CapacitorApp.addListener('backButton', () => {
         if (showDataManagement) {
@@ -142,13 +149,14 @@ export default function App() {
   const handleValidateClass = (classId: string) => {
     setAttendances(prev => {
       const existingIndex = prev.findIndex(a => a.classId === classId && a.date === currentDate);
+      const now = new Date().toISOString();
       
       if (existingIndex >= 0) {
         const newAttendances = [...prev];
-        newAttendances[existingIndex] = { ...newAttendances[existingIndex], isDone: true };
+        newAttendances[existingIndex] = { ...newAttendances[existingIndex], isDone: true, completedAt: now };
         return newAttendances;
       } else {
-        return [...prev, { date: currentDate, classId, isDone: true, absents: [] }];
+        return [...prev, { date: currentDate, classId, isDone: true, absents: [], completedAt: now }];
       }
     });
 
@@ -175,44 +183,67 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-900 font-sans selection:bg-[#1A73E8] selection:text-white">
-      {showDataManagement && (
-        <DataManagement 
-          classes={classes}
-          students={students}
-          onAddStudents={handleAddStudents}
-          onDeleteStudent={handleDeleteStudent}
-          onClose={() => setShowDataManagement(false)}
-        />
-      )}
-      {showReport ? (
-        <GlobalReport 
-          currentDate={currentDate}
-          attendances={attendances}
-          classes={classes}
-          students={students}
-          onBack={handleBackToDashboard}
-        />
-      ) : selectedClassId ? (
-        <ClassAttendance 
-          classData={classes.find(c => c.id === selectedClassId)!}
-          students={students.filter(s => s.classId === selectedClassId)}
-          absents={currentAttendance.absents}
-          onBack={handleBackToDashboard}
-          onUpdateStatus={handleUpdateStudentStatus}
-          onValidate={handleValidateClass}
-        />
-      ) : (
-        <Dashboard 
-          classes={classes} 
-          attendances={attendances}
-          currentDate={currentDate}
-          onDateChange={setCurrentDate}
-          onSelectClass={handleSelectClass} 
-          onOpenReport={() => setShowReport(true)}
-          onOpenDataManagement={() => setShowDataManagement(true)}
-        />
-      )}
+    <div className="min-h-screen bg-gray-100 text-gray-900 font-sans selection:bg-[#1A73E8] selection:text-white overflow-hidden">
+      <AnimatePresence>
+        {showDataManagement && (
+          <motion.div 
+            key="dataManagement"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 pointer-events-none"
+          >
+            <div className="pointer-events-auto h-full">
+              <DataManagement 
+                classes={classes}
+                students={students}
+                onAddStudents={handleAddStudents}
+                onDeleteStudent={handleDeleteStudent}
+                onClose={() => setShowDataManagement(false)}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      <AnimatePresence mode="wait">
+        {showReport ? (
+          <motion.div key="report" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="h-screen w-full absolute top-0 left-0 bg-gray-100">
+            <GlobalReport 
+              currentDate={currentDate}
+              attendances={attendances}
+              classes={classes}
+              students={students}
+              onBack={handleBackToDashboard}
+            />
+          </motion.div>
+        ) : selectedClassId ? (
+          <motion.div key="class" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="h-screen w-full absolute top-0 left-0 bg-gray-100">
+            <ClassAttendance 
+              classData={classes.find(c => c.id === selectedClassId)!}
+              students={students.filter(s => s.classId === selectedClassId)}
+              absents={currentAttendance.absents}
+              onBack={handleBackToDashboard}
+              onUpdateStatus={handleUpdateStudentStatus}
+              onValidate={handleValidateClass}
+            />
+          </motion.div>
+        ) : (
+          <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.2 }} className="h-screen w-full absolute top-0 left-0">
+            <Dashboard 
+              classes={classes} 
+              attendances={attendances}
+              currentDate={currentDate}
+              onDateChange={setCurrentDate}
+              onSelectClass={handleSelectClass} 
+              onOpenReport={() => setShowReport(true)}
+              onOpenDataManagement={() => setShowDataManagement(true)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
       <Toaster position="top-center" />
     </div>
   );
