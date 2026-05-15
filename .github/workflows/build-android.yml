@@ -26,11 +26,17 @@ jobs:
     - name: set up JDK 17
       uses: actions/setup-java@v4
       with:
-        java-version: '21'
+        java-version: '17'
         distribution: 'temurin'
 
     - name: Sync Capacitor
       run: npx cap sync android
+
+    # --- LA SOLUTION EST ICI ---
+    # On utilise le Gradle pré-installé d'Ubuntu pour écraser le fichier .jar corrompu par un neuf
+    - name: Repair Corrupt Gradle Wrapper
+      run: cd android && gradle wrapper
+    # ---------------------------
 
     - name: Grant execute permission for gradlew
       run: cd android && chmod +x gradlew
