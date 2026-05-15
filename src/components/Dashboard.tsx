@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Class, DailyAttendance } from '../types';
 
 let dashboardScrollPos = 0;
+let initialSearchTerm = '';
+let initialFilter: 'all' | 'todo' | 'done' = 'all';
 
 interface DashboardProps {
   classes: Class[];
@@ -24,8 +26,8 @@ export default function Dashboard({
   onOpenReport,
   onOpenDataManagement
 }: DashboardProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState<'all' | 'todo' | 'done'>('all');
+  const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
+  const [filter, setFilter] = useState<'all' | 'todo' | 'done'>(initialFilter);
   const [showNotifications, setShowNotifications] = useState(false);
 
   const classesWithStatus = classes.map(c => {
@@ -95,6 +97,14 @@ export default function Dashboard({
     dashboardScrollPos = e.currentTarget.scrollTop;
   };
 
+  useLayoutEffect(() => {
+    initialSearchTerm = searchTerm;
+  }, [searchTerm]);
+
+  useLayoutEffect(() => {
+    initialFilter = filter;
+  }, [filter]);
+
   const missedDaysCount = notificationItems.filter(item => !item.isComplete).length;
 
   const filteredClasses = classesWithStatus.filter(c => {
@@ -119,7 +129,7 @@ export default function Dashboard({
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ type: "spring", duration: 0.4, bounce: 0.15 }}
+              transition={{ duration: 0.15 }}
               className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col max-h-[70vh]"
               onClick={e => e.stopPropagation()}
             >

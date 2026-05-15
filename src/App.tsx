@@ -191,7 +191,7 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.15 }}
             className="fixed inset-0 z-50 pointer-events-none"
           >
             <div className="pointer-events-auto h-full">
@@ -209,7 +209,7 @@ export default function App() {
       
       <AnimatePresence mode="wait">
         {showReport ? (
-          <motion.div key="report" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="h-screen w-full absolute top-0 left-0 bg-gray-100">
+          <motion.div key="report" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.15 }} className="h-screen w-full absolute top-0 left-0 bg-gray-100">
             <GlobalReport 
               currentDate={currentDate}
               attendances={attendances}
@@ -219,7 +219,7 @@ export default function App() {
             />
           </motion.div>
         ) : selectedClassId ? (
-          <motion.div key="class" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="h-screen w-full absolute top-0 left-0 bg-gray-100">
+          <motion.div key="class" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.15 }} className="h-screen w-full absolute top-0 left-0 bg-gray-100">
             <ClassAttendance 
               classData={classes.find(c => c.id === selectedClassId)!}
               students={students.filter(s => s.classId === selectedClassId)}
@@ -230,7 +230,7 @@ export default function App() {
             />
           </motion.div>
         ) : (
-          <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.2 }} className="h-screen w-full absolute top-0 left-0">
+          <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.15 }} className="h-screen w-full absolute top-0 left-0">
             <Dashboard 
               classes={classes} 
               attendances={attendances}

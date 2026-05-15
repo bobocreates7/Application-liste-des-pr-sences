@@ -78,7 +78,7 @@ export default function DataManagement({ classes, students, onAddStudents, onDel
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ type: "spring", duration: 0.4, bounce: 0.15 }}
+        transition={{ duration: 0.15 }}
         className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden"
       >
         <div className="p-4 border-b border-gray-100 flex justify-between items-center shrink-0">
