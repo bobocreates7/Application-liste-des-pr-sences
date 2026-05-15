@@ -177,7 +177,7 @@ export default function Dashboard({
       {/* Header */}
       <header className="bg-[#1A73E8] text-white p-4 shadow-md z-10 sticky top-0">
         <div className="flex justify-between items-center mb-3">
-          <h1 className="text-xl font-bold tracking-tight">liste de présence</h1>
+          <h1 className="text-xl font-bold tracking-tight">CESCOM LP</h1>
         </div>
         
         {/* Date Selector */}

@@ -5,6 +5,10 @@ const config: CapacitorConfig = {
   appName: 'CESCOM LP',
   webDir: 'dist',
   plugins: {
+    LocalNotifications: {
+      smallIcon: "ic_launcher_round",
+      iconColor: "#1A73E8"
+    },
     SplashScreen: {
       launchShowDuration: 3000,
       launchAutoHide: false,
