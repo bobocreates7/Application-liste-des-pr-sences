@@ -10,13 +10,18 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { AnimatePresence, motion } from 'motion/react';
+import { Home, Users, FileBarChart, Bell } from 'lucide-react';
 import { Class, Student, DailyAttendance } from './types';
 import { initialClasses, initialStudents, initialAttendances } from './data';
 import Dashboard from './components/Dashboard';
 import ClassAttendance from './components/ClassAttendance';
 import GlobalReport from './components/GlobalReport';
 import DataManagement from './components/DataManagement';
+import Notifications from './components/Notifications';
+import SideMenu from './components/SideMenu';
 import { NotificationService } from './services/notificationService';
+
+export type TabType = 'home' | 'students' | 'reports' | 'notifications';
 
 export default function App() {
   const [classes, setClasses] = useState<Class[]>([]);
@@ -25,8 +30,9 @@ export default function App() {
   
   const [currentDate, setCurrentDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
-  const [showReport, setShowReport] = useState(false);
-  const [showDataManagement, setShowDataManagement] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>('home');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [filter, setFilter] = useState<'all' | 'todo' | 'done'>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -43,12 +49,12 @@ export default function App() {
       }, 3000);
 
       CapacitorApp.addListener('backButton', () => {
-        if (showDataManagement) {
-          setShowDataManagement(false);
-        } else if (showReport) {
-          setShowReport(false);
+        if (isMenuOpen) {
+          setIsMenuOpen(false);
         } else if (selectedClassId) {
           setSelectedClassId(null);
+        } else if (activeTab !== 'home') {
+          setActiveTab('home');
         } else if (filter !== 'all') {
           setFilter('all');
         } else if (searchTerm !== '') {
@@ -64,7 +70,7 @@ export default function App() {
         CapacitorApp.removeAllListeners();
       }
     };
-  }, [showDataManagement, showReport, selectedClassId, filter, searchTerm]);
+  }, [isMenuOpen, selectedClassId, activeTab, filter, searchTerm]);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -106,7 +112,6 @@ export default function App() {
 
   const handleBackToDashboard = () => {
     setSelectedClassId(null);
-    setShowReport(false);
   };
 
   const currentAttendance = attendances.find(a => a.classId === selectedClassId && a.date === currentDate) || {
@@ -188,71 +193,120 @@ export default function App() {
     setStudents(prev => prev.filter(s => s.id !== studentId));
   };
 
+  const getUncompletedCount = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const completedToday = attendances.filter(a => a.date === today && a.isDone);
+    return classes.length - completedToday.length;
+  };
+
+  const uncompletedCount = getUncompletedCount();
+
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-900 font-sans selection:bg-[#1A73E8] selection:text-white overflow-hidden">
-      <AnimatePresence>
-        {showDataManagement && (
-          <motion.div 
-            key="dataManagement"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-50 pointer-events-none"
-          >
-            <div className="pointer-events-auto h-full">
-              <DataManagement 
-                classes={classes}
-                students={students}
-                onAddStudents={handleAddStudents}
-                onDeleteStudent={handleDeleteStudent}
-                onClose={() => setShowDataManagement(false)}
+    <div className={`min-h-screen ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-100'} text-gray-900 font-sans selection:bg-[#1A73E8] selection:text-white overflow-hidden flex flex-col`}>
+      <SideMenu 
+        isOpen={isMenuOpen} 
+        onClose={() => setIsMenuOpen(false)} 
+        isDarkMode={isDarkMode}
+        toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+      />
+
+      <div className="flex-1 relative overflow-hidden">
+        <AnimatePresence mode="wait">
+          {selectedClassId ? (
+            <motion.div key="class" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.15 }} className="h-full w-full absolute top-0 left-0 bg-gray-50 flex flex-col z-30">
+              <ClassAttendance 
+                classData={classes.find(c => c.id === selectedClassId)!}
+                students={students.filter(s => s.classId === selectedClassId)}
+                absents={currentAttendance.absents}
+                onBack={handleBackToDashboard}
+                onUpdateStatus={handleUpdateStudentStatus}
+                onValidate={handleValidateClass}
               />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      
-      <AnimatePresence mode="wait">
-        {showReport ? (
-          <motion.div key="report" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.15 }} className="h-screen w-full absolute top-0 left-0 bg-gray-100">
-            <GlobalReport 
-              currentDate={currentDate}
-              attendances={attendances}
-              classes={classes}
-              students={students}
-              onBack={handleBackToDashboard}
-            />
-          </motion.div>
-        ) : selectedClassId ? (
-          <motion.div key="class" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.15 }} className="h-screen w-full absolute top-0 left-0 bg-gray-100">
-            <ClassAttendance 
-              classData={classes.find(c => c.id === selectedClassId)!}
-              students={students.filter(s => s.classId === selectedClassId)}
-              absents={currentAttendance.absents}
-              onBack={handleBackToDashboard}
-              onUpdateStatus={handleUpdateStudentStatus}
-              onValidate={handleValidateClass}
-            />
-          </motion.div>
-        ) : (
-          <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.15 }} className="h-screen w-full absolute top-0 left-0">
-            <Dashboard 
-              classes={classes} 
-              attendances={attendances}
-              currentDate={currentDate}
-              onDateChange={setCurrentDate}
-              onSelectClass={handleSelectClass} 
-              onOpenReport={() => setShowReport(true)}
-              onOpenDataManagement={() => setShowDataManagement(true)}
-              filter={filter}
-              setFilter={setFilter}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          ) : (
+            <motion.div key="main-tabs" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="h-full w-full absolute top-0 left-0 bg-gray-50 flex flex-col">
+              <div className="flex-1 overflow-hidden relative">
+                {activeTab === 'home' && (
+                  <Dashboard 
+                    classes={classes} 
+                    attendances={attendances}
+                    currentDate={currentDate}
+                    onDateChange={setCurrentDate}
+                    onSelectClass={handleSelectClass} 
+                    onOpenMenu={() => setIsMenuOpen(true)}
+                    filter={filter}
+                    setFilter={setFilter}
+                    searchTerm={searchTerm}
+                    setSearchTerm={setSearchTerm}
+                  />
+                )}
+                {activeTab === 'students' && (
+                  <DataManagement 
+                    classes={classes}
+                    students={students}
+                    onAddStudents={handleAddStudents}
+                    onDeleteStudent={handleDeleteStudent}
+                  />
+                )}
+                {activeTab === 'reports' && (
+                  <GlobalReport 
+                    currentDate={currentDate}
+                    attendances={attendances}
+                    classes={classes}
+                    students={students}
+                  />
+                )}
+                {activeTab === 'notifications' && (
+                  <Notifications 
+                    classes={classes}
+                    attendances={attendances}
+                    onDateChange={setCurrentDate}
+                    onClose={() => setActiveTab('home')}
+                  />
+                )}
+              </div>
+
+              {/* Bottom Navigation Navbar */}
+              <nav className="bg-white border-t border-gray-100 z-40 shadow-[0_-8px_16px_-1px_rgba(0,0,0,0.03)] w-full">
+                <div className="flex justify-around items-center h-[64px] max-w-md mx-auto px-2">
+                  <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center justify-center w-full h-full transition-colors ${activeTab === 'home' ? 'text-[#1A73E8]' : 'text-gray-400 hover:text-gray-900'}`}>
+                    <div className={`p-1.5 rounded-xl transition-all duration-300 ${activeTab === 'home' ? 'bg-blue-50/80 translate-y-[-2px]' : ''}`}>
+                      <Home strokeWidth={activeTab === 'home' ? 2.5 : 2} className="w-5 h-5" />
+                    </div>
+                    <span className="text-[10px] font-bold mt-0.5 tracking-tight">Accueil</span>
+                  </button>
+                  
+                  <button onClick={() => setActiveTab('students')} className={`flex flex-col items-center justify-center w-full h-full transition-colors ${activeTab === 'students' ? 'text-[#1A73E8]' : 'text-gray-400 hover:text-gray-900'}`}>
+                    <div className={`p-1.5 rounded-xl transition-all duration-300 ${activeTab === 'students' ? 'bg-blue-50/80 translate-y-[-2px]' : ''}`}>
+                      <Users strokeWidth={activeTab === 'students' ? 2.5 : 2} className="w-5 h-5" />
+                    </div>
+                    <span className="text-[10px] font-bold mt-0.5 tracking-tight">Élèves</span>
+                  </button>
+
+                  <button onClick={() => setActiveTab('reports')} className={`flex flex-col items-center justify-center w-full h-full transition-colors ${activeTab === 'reports' ? 'text-[#1A73E8]' : 'text-gray-400 hover:text-gray-900'}`}>
+                    <div className={`p-1.5 rounded-xl transition-all duration-300 ${activeTab === 'reports' ? 'bg-blue-50/80 translate-y-[-2px]' : ''}`}>
+                      <FileBarChart strokeWidth={activeTab === 'reports' ? 2.5 : 2} className="w-5 h-5" />
+                    </div>
+                    <span className="text-[10px] font-bold mt-0.5 tracking-tight">Rapports</span>
+                  </button>
+
+                  <button onClick={() => setActiveTab('notifications')} className={`flex flex-col items-center justify-center w-full h-full transition-colors relative ${activeTab === 'notifications' ? 'text-[#1A73E8]' : 'text-gray-400 hover:text-gray-900'}`}>
+                    <div className={`p-1.5 rounded-xl transition-all duration-300 ${activeTab === 'notifications' ? 'bg-blue-50/80 translate-y-[-2px]' : ''} relative`}>
+                      <Bell strokeWidth={activeTab === 'notifications' ? 2.5 : 2} className="w-5 h-5" />
+                      {uncompletedCount > 0 && (
+                        <span className="absolute 1 top-1.5 right-1.5 translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm border-2 border-white">
+                          {uncompletedCount}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] font-bold mt-0.5 tracking-tight">Alertes</span>
+                  </button>
+                </div>
+              </nav>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
       
       <Toaster position="top-center" />
     </div>

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
 import { Class, Student } from '../types';
-import { X, Users, Plus, Trash2, ClipboardPaste } from 'lucide-react';
+import { Users, Plus, Trash2, ClipboardPaste } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface DataManagementProps {
@@ -9,7 +8,6 @@ interface DataManagementProps {
   students: Student[];
   onAddStudents: (students: Student[]) => void;
   onDeleteStudent: (studentId: string) => void;
-  onClose: () => void;
 }
 
 const generateId = () => {
@@ -18,7 +16,7 @@ const generateId = () => {
     : Math.random().toString(36).substring(2, 15);
 };
 
-export default function DataManagement({ classes, students, onAddStudents, onDeleteStudent, onClose }: DataManagementProps) {
+export default function DataManagement({ classes, students, onAddStudents, onDeleteStudent }: DataManagementProps) {
   const [selectedClassId, setSelectedClassId] = useState<string>(classes[0]?.id || '');
   const [bulkText, setBulkText] = useState('');
 
@@ -74,26 +72,15 @@ export default function DataManagement({ classes, students, onAddStudents, onDel
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 z-50">
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95, y: 10 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.15 }}
-        className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden"
-      >
-        <div className="p-4 border-b border-gray-100 flex justify-between items-center shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
-              <Users className="w-4 h-4" />
-            </div>
-            <h2 className="text-lg font-semibold text-gray-900">Gérer les élèves</h2>
-          </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors p-1">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <div className="flex flex-col h-full bg-gray-50 flex-1">
+      {/* Header */}
+      <header className="bg-[#1A73E8] text-white p-4 shadow-md z-10 sticky top-0 flex justify-between items-center">
+        <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
+          Gérer les élèves
+        </h1>
+      </header>
 
-        <div className="flex flex-col md:flex-row flex-1 overflow-y-auto md:overflow-hidden">
+      <div className="flex flex-col md:flex-row flex-1 overflow-y-auto md:overflow-hidden pb-24">
           {/* Left side: Add students */}
           <div className="p-4 border-b md:border-b-0 md:border-r border-gray-100 md:w-1/2 flex flex-col gap-3 shrink-0 md:overflow-y-auto">
             <div>
@@ -170,7 +157,6 @@ export default function DataManagement({ classes, students, onAddStudents, onDel
             </div>
           </div>
         </div>
-      </motion.div>
     </div>
   );
 }

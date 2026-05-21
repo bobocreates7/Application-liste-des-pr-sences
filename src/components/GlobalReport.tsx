@@ -12,15 +12,13 @@ interface GlobalReportProps {
   attendances: DailyAttendance[];
   classes: Class[];
   students: Student[];
-  onBack: () => void;
 }
 
 export default function GlobalReport({ 
   currentDate, 
   attendances, 
   classes, 
-  students, 
-  onBack 
+  students
 }: GlobalReportProps) {
   
   // Get all attendances for the current date
@@ -195,18 +193,10 @@ export default function GlobalReport({
   };
 
   return (
-    <div className="flex flex-col h-screen max-w-md mx-auto bg-gray-50 shadow-xl overflow-hidden relative">
+    <div className="flex flex-col h-full bg-gray-50 flex-1 relative">
       {/* Header */}
-      <header className="bg-[#1A73E8] text-white p-3 flex items-center justify-between sticky top-0 z-20 shadow-md">
-        <button 
-          onClick={onBack}
-          className="p-1.5 -ml-1.5 rounded-full hover:bg-white/20 active:bg-white/30 transition-colors"
-          aria-label="Retour"
-        >
-          <ArrowLeft className="w-5 h-5 text-white" />
-        </button>
-        <h1 className="text-lg font-bold">Rapport Global</h1>
-        <div className="w-8"></div> {/* Spacer for centering */}
+      <header className="bg-[#1A73E8] text-white p-4 shadow-md z-10 sticky top-0 flex items-center justify-between">
+        <h1 className="text-xl font-bold tracking-tight">Rapport Global</h1>
       </header>
 
       <main className="flex-1 overflow-y-auto p-3 pb-28">
@@ -248,7 +238,7 @@ export default function GlobalReport({
       </main>
 
       {/* Floating Footer */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent pt-10">
+      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent pt-10 pb-24">
         <button
           onClick={handleExport}
           disabled={absentDetails.length === 0}
