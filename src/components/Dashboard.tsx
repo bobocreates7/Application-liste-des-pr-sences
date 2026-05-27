@@ -58,16 +58,14 @@ export default function Dashboard({
   });
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 flex-1 relative">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 flex-1 relative">
       {/* Header */}
       <header className="bg-[#1A73E8] text-white p-4 shadow-md z-10 sticky top-0">
         <div className="flex justify-between items-center mb-3">
-          <div className="flex items-center gap-3">
-            <button onClick={onOpenMenu} className="p-1 -ml-1 hover:bg-white/20 rounded-full transition-colors active:bg-white/30">
-              <Menu className="w-6 h-6 text-white" />
-            </button>
-            <h1 className="text-xl font-bold tracking-tight">CESCOM LP</h1>
-          </div>
+          <h1 className="text-xl font-bold tracking-tight">CESCOM LP</h1>
+          <button onClick={onOpenMenu} className="p-1 -mr-1 hover:bg-white/20 rounded-full transition-colors active:bg-white/30">
+            <Menu className="w-6 h-6 text-white" />
+          </button>
         </div>
         
         {/* Date Selector */}
@@ -84,11 +82,11 @@ export default function Dashboard({
         {/* Search Bar */}
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-gray-400" />
+            <Search className="h-4 w-4 text-gray-400 dark:text-gray-500" />
           </div>
           <input
             type="text"
-            className="block w-full pl-9 pr-3 py-2 border-none rounded-xl bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/50 shadow-sm text-sm"
+            className="block w-full pl-9 pr-3 py-2 border-none rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50 shadow-sm text-sm"
             placeholder="Rechercher une classe..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -119,9 +117,9 @@ export default function Dashboard({
       </header>
 
       {/* Class List */}
-      <main ref={mainRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-3 space-y-2.5 pb-24">
+      <main ref={mainRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-3 space-y-2.5 pb-3">
         {filteredClasses.length === 0 ? (
-          <div className="text-center py-8 text-sm text-gray-500">
+          <div className="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
             Aucune classe trouvée.
           </div>
         ) : (
@@ -129,12 +127,12 @@ export default function Dashboard({
             <button
               key={c.id}
               onClick={() => onSelectClass(c.id)}
-              className="w-full text-left bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between active:scale-[0.98] transition-transform"
+              className="w-full text-left bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between active:scale-[0.98] transition-transform group"
               style={{ minHeight: '64px' }}
             >
               <div>
-                <h2 className="text-lg font-bold text-gray-900">{c.name}</h2>
-                <div className="flex items-center text-gray-500 mt-0.5">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">{c.name}</h2>
+                <div className="flex items-center text-gray-500 dark:text-gray-400 mt-0.5">
                   <MapPin className="w-3.5 h-3.5 mr-1" />
                   <span className="text-xs">{c.building}</span>
                 </div>
@@ -142,7 +140,7 @@ export default function Dashboard({
               
               <div className="flex items-center gap-2">
                 {c.isDone && c.absentsCount > 0 && (
-                  <span className="text-xs font-medium text-[#E53935] bg-red-50 px-2 py-1 rounded-md">
+                  <span className="text-xs font-medium text-[#E53935] dark:text-red-400 bg-red-50 dark:bg-red-900/30 px-2 py-1 rounded-md">
                     {c.absentsCount} absent{c.absentsCount > 1 ? 's' : ''}
                   </span>
                 )}
@@ -150,7 +148,7 @@ export default function Dashboard({
                   {c.isDone ? (
                     <CheckCircle2 className="w-6 h-6 text-[#43A047]" />
                   ) : (
-                    <Circle className="w-6 h-6 text-gray-300" />
+                    <Circle className="w-6 h-6 text-gray-300 dark:text-gray-600" />
                   )}
                 </div>
               </div>

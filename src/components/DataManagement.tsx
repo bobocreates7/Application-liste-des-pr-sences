@@ -80,7 +80,7 @@ export default function DataManagement({ classes, students, onAddStudents, onDel
         </h1>
       </header>
 
-      <div className="flex flex-col md:flex-row flex-1 overflow-y-auto md:overflow-hidden pb-24">
+      <div className="flex flex-col md:flex-row flex-1 overflow-y-auto md:overflow-hidden pb-3">
           {/* Left side: Add students */}
           <div className="p-4 border-b md:border-b-0 md:border-r border-gray-100 md:w-1/2 flex flex-col gap-3 shrink-0 md:overflow-y-auto">
             <div>

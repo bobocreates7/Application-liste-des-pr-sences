@@ -12,11 +12,13 @@ interface NotificationsProps {
 export default function Notifications({ classes, attendances, onDateChange, onClose }: NotificationsProps) {
   const recentWorkingDays = useMemo(() => {
     const dates = [];
-    let d = new Date();
-    // Only check today
-    const dayOfWeek = d.getDay();
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-      dates.push(d.toISOString().split('T')[0]);
+    for (let i = 0; i < 5; i++) {
+      let d = new Date();
+      d.setDate(d.getDate() - i);
+      const dayOfWeek = d.getDay();
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        dates.push(d.toISOString().split('T')[0]);
+      }
     }
     return dates;
   }, []);
@@ -55,7 +57,7 @@ export default function Notifications({ classes, attendances, onDateChange, onCl
   const missedDaysCount = notificationItems.filter(item => !item.isComplete).length;
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 flex-1">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 flex-1">
       <header className="bg-[#1A73E8] text-white p-4 shadow-md z-10 sticky top-0 justify-between items-center flex">
         <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
           Alertes 
@@ -63,9 +65,9 @@ export default function Notifications({ classes, attendances, onDateChange, onCl
         </h1>
       </header>
       
-      <main className="flex-1 overflow-y-auto p-3 pb-24">
+      <main className="flex-1 overflow-y-auto p-3 pb-3">
         {notificationItems.length === 0 ? (
-           <div className="text-center p-8 text-gray-500 text-sm">
+           <div className="text-center p-8 text-gray-500 dark:text-gray-400 text-sm">
               Aucune notification pour aujourd'hui.
            </div>
         ) : (
@@ -77,25 +79,25 @@ export default function Notifications({ classes, attendances, onDateChange, onCl
                   onDateChange(item.date);
                   onClose(); // This should be setActiveTab('home')
                 }}
-                className={`w-full text-left p-4 bg-white shadow-sm hover:bg-gray-50 active:bg-gray-100 rounded-xl flex flex-col gap-1.5 transition-colors border ${!item.isComplete ? 'border-red-100 bg-red-50/20' : 'border-gray-100'}`}
+                className={`w-full text-left p-4 bg-white dark:bg-gray-800 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600 rounded-xl flex flex-col gap-1.5 transition-colors border ${!item.isComplete ? 'border-red-100 dark:border-red-900/30 bg-red-50/20 dark:bg-red-900/10' : 'border-gray-100 dark:border-gray-700'}`}
               >
                 <div className="flex justify-between items-center w-full">
-                  <span className="font-bold text-gray-900 text-base capitalize">{item.formattedDate}</span>
+                  <span className="font-bold text-gray-900 dark:text-white text-base capitalize">{item.formattedDate}</span>
                   {item.isComplete ? (
-                    <Check className="w-5 h-5 text-green-500" />
+                    <Check className="w-5 h-5 text-green-500 dark:text-green-400" />
                   ) : (
-                    <span className="text-xs uppercase font-bold text-red-600 tracking-wider bg-red-100 px-2 py-0.5 rounded-md">
+                    <span className="text-xs uppercase font-bold text-red-600 dark:text-red-400 tracking-wider bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded-md">
                       {item.pendingCount} manquant(s)
                     </span>
                   )}
                 </div>
                 {item.isComplete ? (
-                  <div className="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 dark:text-green-400" />
                     Appels effectués {item.lastCompletedAt ? `le ${new Date(item.lastCompletedAt).toLocaleDateString('fr-FR')} à ${new Date(item.lastCompletedAt).toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'})}` : ''}
                   </div>
                 ) : (
-                  <div className="text-xs text-red-500/80 mt-1">
+                  <div className="text-xs text-red-500/80 dark:text-red-400/80 mt-1">
                     Veuillez compléter tous les appels pour cette journée. Appuyez ici pour y aller.
                   </div>
                 )}

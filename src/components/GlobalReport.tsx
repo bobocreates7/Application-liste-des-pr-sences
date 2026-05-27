@@ -199,7 +199,7 @@ export default function GlobalReport({
         <h1 className="text-xl font-bold tracking-tight">Rapport Global</h1>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-3 pb-28">
+      <main className="flex-1 overflow-y-auto p-3 pb-24">
         {/* Summary Card */}
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-4 text-center">
           <p className="text-gray-500 text-sm font-medium mb-1 capitalize">{formattedDate}</p>
@@ -238,7 +238,7 @@ export default function GlobalReport({
       </main>
 
       {/* Floating Footer */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent pt-10 pb-24">
+      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent pt-10">
         <button
           onClick={handleExport}
           disabled={absentDetails.length === 0}
