@@ -1,6 +1,7 @@
-import { ArrowLeft, Download, FileText } from 'lucide-react';
+import { ArrowLeft, Download, FileText, Filter } from 'lucide-react';
 import { Class, Student, DailyAttendance } from '../types';
 import { toast } from 'sonner';
+import { useState } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Filesystem, Directory } from '@capacitor/filesystem';
@@ -21,23 +22,30 @@ export default function GlobalReport({
   students
 }: GlobalReportProps) {
   
+  const [selectedClassFilter, setSelectedClassFilter] = useState<string>('all');
+
   // Get all attendances for the current date
   const todaysAttendances = attendances.filter(a => a.date === currentDate);
   
-  // Calculate total absents
-  const totalAbsents = todaysAttendances.reduce((acc, curr) => acc + curr.absents.length, 0);
-
   // Prepare list of absent students with their class and reason
-  const absentDetails = todaysAttendances.flatMap(attendance => {
+  const allAbsentDetails = todaysAttendances.flatMap(attendance => {
     const classInfo = classes.find(c => c.id === attendance.classId);
     return attendance.absents.map(absent => {
       const studentInfo = students.find(s => s.id === absent.studentId);
       return {
         student: studentInfo,
-        className: classInfo?.name || 'Inconnue'
+        className: classInfo?.name || 'Inconnue',
+        classId: classInfo?.id
       };
     });
   }).filter(detail => detail.student); // Remove any undefined students
+
+  const absentDetails = selectedClassFilter === 'all' 
+    ? allAbsentDetails 
+    : allAbsentDetails.filter(d => d.classId === selectedClassFilter);
+
+  // Calculate total absents
+  const totalAbsents = absentDetails.length;
 
   // Sort by class name, then student last name, then first name
   absentDetails.sort((a, b) => {
@@ -66,12 +74,16 @@ export default function GlobalReport({
       // Subtitle / Date
       doc.setFontSize(12);
       doc.setTextColor(100, 100, 100);
-      doc.text(`Date : ${formattedDate}`, 14, 32);
+      doc.text(`Date : ${formattedDate}`, 14, 30);
+
+      // Class Filter Note
+      const classFilterName = selectedClassFilter === 'all' ? 'Toutes les classes' : classes.find(c => c.id === selectedClassFilter)?.name || '';
+      doc.text(`Classe : ${classFilterName}`, 14, 36);
       
       // Total
       doc.setFontSize(14);
       doc.setTextColor(229, 57, 53); // #E53935
-      doc.text(`Total des absents : ${totalAbsents}`, 14, 42);
+      doc.text(`Total des absents : ${totalAbsents}`, 14, 46);
 
       // Table Data
       const tableData = absentDetails.map(detail => [
@@ -81,7 +93,7 @@ export default function GlobalReport({
 
       // Generate Table
       autoTable(doc, {
-        startY: 50,
+        startY: 52,
         head: [['Élève', 'Classe']],
         body: tableData,
         theme: 'striped',
@@ -195,8 +207,25 @@ export default function GlobalReport({
   return (
     <div className="flex flex-col h-full bg-gray-50 flex-1 relative">
       {/* Header */}
-      <header className="bg-[#1A73E8] text-white p-4 shadow-md z-10 sticky top-0 flex items-center justify-between">
+      <header className="bg-[#1A73E8] text-white p-4 shadow-md z-10 sticky top-0 flex flex-col gap-3">
         <h1 className="text-xl font-bold tracking-tight">Rapport Global</h1>
+        
+        {/* Class Filter */}
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Filter className="h-4 w-4 text-white/70" />
+          </div>
+          <select
+             value={selectedClassFilter}
+             onChange={(e) => setSelectedClassFilter(e.target.value)}
+             className="block w-full pl-9 pr-3 py-2 border-none rounded-xl bg-white/10 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 shadow-sm text-sm appearance-none cursor-pointer"
+          >
+            <option value="all" className="text-gray-900">Toutes les classes</option>
+            {classes.map(c => (
+              <option key={c.id} value={c.id} className="text-gray-900">{c.name}</option>
+            ))}
+          </select>
+        </div>
       </header>
 
       <main className="flex-1 overflow-y-auto p-3 pb-24">

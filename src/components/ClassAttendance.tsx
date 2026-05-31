@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { ArrowLeft, Check, Search } from 'lucide-react';
-import { Class, Student, AbsentRecord } from '../types';
+import { ArrowLeft, Check, Search, Folder, X, Calendar as CalendarIcon } from 'lucide-react';
+import { Class, Student, AbsentRecord, DailyAttendance } from '../types';
 
 interface ClassAttendanceProps {
   classData: Class;
   students: Student[];
   absents: AbsentRecord[];
+  attendances: DailyAttendance[];
   onBack: () => void;
   onUpdateStatus: (studentId: string, isAbsent: boolean) => void;
   onValidate: (classId: string) => void;
@@ -15,11 +16,13 @@ export default function ClassAttendance({
   classData, 
   students, 
   absents,
+  attendances,
   onBack, 
   onUpdateStatus, 
   onValidate 
 }: ClassAttendanceProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStudentForAbsences, setSelectedStudentForAbsences] = useState<Student | null>(null);
   
   const absentCount = absents.length;
 
@@ -81,9 +84,18 @@ export default function ClassAttendance({
               return (
                 <div key={student.id} className="bg-white dark:bg-gray-800 p-3 flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <div className="flex-1 pr-3">
-                      <p className="text-base font-medium text-gray-900 dark:text-white uppercase">{student.lastName}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{student.firstName}</p>
+                    <div className="flex-1 pr-3 flex items-start gap-3">
+                      <button 
+                         onClick={() => setSelectedStudentForAbsences(student)} 
+                         className="mt-0.5 p-1.5 text-gray-400 dark:text-gray-500 hover:text-[#1A73E8] dark:hover:text-[#3B82F6] bg-gray-50 dark:bg-gray-700/50 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors border border-transparent dark:border-gray-600 shrink-0"
+                         title="Voir l'historique des absences"
+                      >
+                         <Folder className="w-5 h-5" />
+                      </button>
+                      <div className="flex-1">
+                        <p className="text-base font-medium text-gray-900 dark:text-white uppercase">{student.lastName}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{student.firstName}</p>
+                      </div>
                     </div>
                     
                     <div className="flex gap-1.5">
@@ -135,6 +147,50 @@ export default function ClassAttendance({
           </button>
         </div>
       </div>
+
+      {/* Absences Modal */}
+      {selectedStudentForAbsences && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-sm shadow-2xl flex flex-col max-h-[80vh] border border-white/20 dark:border-gray-800 animate-in slide-in-from-bottom-4 duration-300">
+            <div className="p-5 flex justify-between items-start border-b border-gray-100 dark:border-gray-800">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white uppercase">{selectedStudentForAbsences.lastName}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{selectedStudentForAbsences.firstName}</p>
+              </div>
+              <button 
+                onClick={() => setSelectedStudentForAbsences(null)}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-500 transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              </button>
+            </div>
+            
+            <div className="p-5 overflow-y-auto flex-1">
+              <div className="flex items-center gap-2 mb-4 text-[#E53935] dark:text-red-400">
+                <CalendarIcon className="w-5 h-5" />
+                <h4 className="font-semibold text-[15px]">Historique d'absences</h4>
+              </div>
+              
+              <div className="flex flex-col gap-2">
+                {attendances
+                  .filter(a => a.classId === classData.id && a.isDone && a.absents.some(ab => ab.studentId === selectedStudentForAbsences.id))
+                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                  .map(a => (
+                    <div key={a.date} className="p-3 rounded-xl bg-red-50/50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 flex items-center gap-3">
+                       <div className="w-2 h-2 rounded-full bg-red-500 dark:bg-red-400 shrink-0"></div>
+                       <span className="text-sm font-medium text-gray-800 dark:text-gray-200 capitalize">
+                         {new Date(a.date).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                       </span>
+                    </div>
+                ))}
+                {attendances.filter(a => a.classId === classData.id && a.isDone && a.absents.some(ab => ab.studentId === selectedStudentForAbsences.id)).length === 0 && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 italic py-4 text-center">Aucune absence enregistrée.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

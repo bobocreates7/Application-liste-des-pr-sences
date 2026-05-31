@@ -204,18 +204,14 @@ export default function App() {
   };
 
   const getUncompletedCount = () => {
-    // Check the last 5 working days
     let missedDays = 0;
-    for (let i = 0; i < 5; i++) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const dayOfWeek = d.getDay();
-        if (dayOfWeek !== 0 && dayOfWeek !== 6) { // skip weekends
-            const dateStr = d.toISOString().split('T')[0];
-            const completedCount = attendances.filter(a => a.date === dateStr && a.isDone).length;
-            if (completedCount < classes.length) {
-                missedDays++;
-            }
+    const d = new Date();
+    const dayOfWeek = d.getDay();
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) { // skip weekends
+        const dateStr = d.toISOString().split('T')[0];
+        const completedCount = attendances.filter(a => a.date === dateStr && a.isDone).length;
+        if (completedCount < classes.length) {
+            missedDays++;
         }
     }
     return missedDays;
@@ -240,6 +236,7 @@ export default function App() {
                 classData={classes.find(c => c.id === selectedClassId)!}
                 students={students.filter(s => s.classId === selectedClassId)}
                 absents={currentAttendance.absents}
+                attendances={attendances}
                 onBack={handleBackToDashboard}
                 onUpdateStatus={handleUpdateStudentStatus}
                 onValidate={handleValidateClass}
@@ -251,6 +248,7 @@ export default function App() {
                 {activeTab === 'home' && (
                   <Dashboard 
                     classes={classes} 
+                    students={students}
                     attendances={attendances}
                     currentDate={currentDate}
                     onDateChange={setCurrentDate}

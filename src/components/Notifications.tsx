@@ -12,13 +12,10 @@ interface NotificationsProps {
 export default function Notifications({ classes, attendances, onDateChange, onClose }: NotificationsProps) {
   const recentWorkingDays = useMemo(() => {
     const dates = [];
-    for (let i = 0; i < 5; i++) {
-      let d = new Date();
-      d.setDate(d.getDate() - i);
-      const dayOfWeek = d.getDay();
-      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-        dates.push(d.toISOString().split('T')[0]);
-      }
+    let d = new Date();
+    const dayOfWeek = d.getDay();
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      dates.push(d.toISOString().split('T')[0]);
     }
     return dates;
   }, []);
