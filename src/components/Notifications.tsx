@@ -15,8 +15,13 @@ export default function Notifications({ classes, attendances, onDateChange, onCl
     const dates = [];
     
     let startDateStr = getLocalYMD();
-    const stored = localStorage.getItem('cescom_first_open_date');
-    if (stored) startDateStr = stored;
+    
+    if (attendances.length > 0) {
+      const earliestAttendance = attendances.reduce((min, cur) => new Date(cur.date) < new Date(min) ? cur.date : min, attendances[0].date);
+      if (new Date(earliestAttendance) < new Date(startDateStr)) {
+        startDateStr = earliestAttendance;
+      }
+    }
     
     const today = new Date();
     // Exclude today if it's before 10 AM, only display past days + today if >= 10AM

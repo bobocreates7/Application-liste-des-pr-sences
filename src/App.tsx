@@ -96,11 +96,6 @@ export default function App() {
       setRole(storedRole);
     }
     
-    if (!localStorage.getItem('cescom_first_open_date')) {
-      const d = new Date();
-      localStorage.setItem('cescom_first_open_date', getLocalYMD(d));
-    }
-    
     const storedAuth = localStorage.getItem('app_authenticated');
     if (storedAuth === 'true') {
       setIsAuthenticated(true);
@@ -328,10 +323,14 @@ export default function App() {
   const getUncompletedCount = () => {
     let missedDays = 0;
     
-    // Begin calculating from the earliest attendance date, or today if none exist
     let startDateStr = getLocalYMD();
-    const stored = localStorage.getItem('cescom_first_open_date');
-    if (stored) startDateStr = stored;
+
+    if (attendances.length > 0) {
+      const earliestAttendance = attendances.reduce((min, cur) => new Date(cur.date) < new Date(min) ? cur.date : min, attendances[0].date);
+      if (new Date(earliestAttendance) < new Date(startDateStr)) {
+        startDateStr = earliestAttendance;
+      }
+    }
     
     const today = new Date();
     // Exclude today if it's before 10:00 AM (because the alert hasn't triggered yet)
