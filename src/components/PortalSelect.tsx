@@ -18,7 +18,7 @@ export default function PortalSelect({ onSelectRole }: PortalSelectProps) {
     if (selectedRole === 'prof') {
       onSelectRole('prof');
     } else if (selectedRole === 'prefet') {
-      if (password === 'CESCOMJEAN2026') {
+      if (password === 'CES2026') {
         onSelectRole('prefet');
       } else {
         toast.error('Code de sécurité incorrect.');
