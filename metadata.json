@@ -1,5 +1,8 @@
 {
-  "name": "Tournée d'Appel",
+  "name": "CESCOM LP",
   "description": "Application de gestion des absences pour les préfets.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

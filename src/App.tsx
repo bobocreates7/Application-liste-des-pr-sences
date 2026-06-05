@@ -25,8 +25,7 @@ import AuthScreen from './components/AuthScreen';
 
 // Firebase imports
 import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch } from 'firebase/firestore';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { db, auth } from './firebase';
+import { db } from './firebase';
 
 export type TabType = 'home' | 'students' | 'reports' | 'notifications';
 
@@ -44,7 +43,7 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   
   const [role, setRole] = useState<UserRole | null>(null);
-  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
 
   // Initialize StatusBar and BackButton
@@ -95,17 +94,11 @@ export default function App() {
       localStorage.setItem('cescom_first_open_date', d.toISOString().split('T')[0]);
     }
     
-    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setAuthLoading(false);
-      // Automatically clear role if logged out
-      if (!currentUser) {
-        setRole(null);
-        localStorage.removeItem('app_portal_role');
-      }
-    });
-    
-    return () => unsubscribeAuth();
+    const storedAuth = localStorage.getItem('app_authenticated');
+    if (storedAuth === 'true') {
+      setIsAuthenticated(true);
+    }
+    setAuthLoading(false);
   }, []);
 
   // Sync data with Firebase
@@ -216,11 +209,22 @@ export default function App() {
     }
 
     const attendanceId = existingAttendance?.id || `${selectedClassId}_${currentDate}`;
-    const newAttendance = {
+    const newAttendance = JSON.parse(JSON.stringify({
       ...currentAttendance,
       id: attendanceId,
       absents: newAbsents
-    };
+    }));
+
+    // Optimistic Local State Update
+    setAttendances(prev => {
+      const idx = prev.findIndex(a => a.classId === selectedClassId && a.date === currentDate);
+      if (idx >= 0) {
+          const next = [...prev];
+          next[idx] = newAttendance;
+          return next;
+      }
+      return [...prev, newAttendance];
+    });
 
     setDoc(doc(db, 'attendances', attendanceId), newAttendance).catch(e => {
       console.error(e);
@@ -228,24 +232,42 @@ export default function App() {
     });
   };
 
-  const handleValidateClass = async (classId: string) => {
+  const handleValidateClass = (classId: string) => {
     const existingAttendance = attendances.find(a => a.classId === classId && a.date === currentDate);
     const now = new Date().toISOString();
     const attendanceId = existingAttendance?.id || `${classId}_${currentDate}`;
     
-    const newAttendance = {
-      ...(existingAttendance || { date: currentDate, classId, absents: [] }),
+    const baseAttendance = existingAttendance || {
+      date: currentDate,
+      classId: classId,
+      absents: []
+    };
+
+    // Strip any undefined values to avoid Firebase sync errors
+    const newAttendance = JSON.parse(JSON.stringify({
+      ...baseAttendance,
       id: attendanceId,
       isDone: true,
       completedAt: now
-    };
+    }));
 
-    setDoc(doc(db, 'attendances', attendanceId), newAttendance).catch(e => {
-      console.error(e);
-      toast.error('Erreur de synchronisation en arrière-plan');
+    // Optimistic state update (if you want immediate local reflection)
+    setAttendances(prev => {
+      const idx = prev.findIndex(a => a.classId === classId && a.date === currentDate);
+      if (idx >= 0) {
+          const next = [...prev];
+          next[idx] = newAttendance;
+          return next;
+      }
+      return [...prev, newAttendance];
     });
 
-    const absentCount = newAttendance.absents.length;
+    setDoc(doc(db, 'attendances', attendanceId), newAttendance).catch(error => {
+      console.error('Erreur validation:', error);
+      toast.error('Erreur lors de la validation', { description: String(error) });
+    });
+
+    const absentCount = newAttendance.absents.length || 0;
 
     toast.success('Appel validé et synchronisé !', {
       description: `${absentCount} absent(s) signalé(s).`,
@@ -318,15 +340,18 @@ export default function App() {
     localStorage.setItem('app_portal_role', selectedRole);
   };
 
-  const handleLogout = async () => {
-    try {
-      await auth.signOut();
-      setRole(null);
-      localStorage.removeItem('app_portal_role');
-      setActiveTab('home');
-    } catch (e) {
-      console.error('Logout error', e);
-    }
+  const handleLogout = () => {
+    setRole(null);
+    localStorage.removeItem('app_portal_role');
+    setActiveTab('home');
+  };
+
+  const handleAppLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('app_authenticated');
+    setRole(null);
+    localStorage.removeItem('app_portal_role');
+    setActiveTab('home');
   };
 
   if (authLoading) {
@@ -337,8 +362,11 @@ export default function App() {
     );
   }
 
-  if (!user) {
-    return <AuthScreen />;
+  if (!isAuthenticated) {
+    return <AuthScreen onLogin={() => {
+      setIsAuthenticated(true);
+      localStorage.setItem('app_authenticated', 'true');
+    }} />;
   }
 
   if (!role) {
@@ -354,6 +382,7 @@ export default function App() {
         toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
         role={role}
         onLogout={handleLogout}
+        onAppLogout={handleAppLogout}
       />
 
       <div className="flex-1 relative overflow-hidden">

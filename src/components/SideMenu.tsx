@@ -9,9 +9,10 @@ interface SideMenuProps {
   toggleDarkMode: () => void;
   role?: UserRole | null;
   onLogout: () => void;
+  onAppLogout?: () => void;
 }
 
-export default function SideMenu({ isOpen, onClose, isDarkMode, toggleDarkMode, role, onLogout }: SideMenuProps) {
+export default function SideMenu({ isOpen, onClose, isDarkMode, toggleDarkMode, role, onLogout, onAppLogout }: SideMenuProps) {
   // Optionnel: ajout du geste swipe à droite pour fermer plus tard,
   // mais la consigne demande un swipe gauche pour ouvrir (ce qui doit être géré au niveau app),
   // et on peut glisser à droite pour fermer le menu.
@@ -62,11 +63,23 @@ export default function SideMenu({ isOpen, onClose, isDarkMode, toggleDarkMode, 
                         onLogout();
                         onClose();
                     }}
-                    className="w-full flex items-center justify-between p-4 transition-colors text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-2xl"
+                    className="w-full flex items-center justify-between p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-900/50 rounded-t-2xl border-b border-gray-100 dark:border-gray-700/50"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
                       <LogOut className="w-5 h-5" />
                       <span className="font-semibold text-[15px]">Changer de profil ({role === 'prefet' ? 'Préfet' : 'Professeur'})</span>
+                    </div>
+                  </button>
+                  <button 
+                    onClick={() => {
+                        if (onAppLogout) onAppLogout();
+                        onClose();
+                    }}
+                    className="w-full flex items-center justify-between p-4 transition-colors text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-b-2xl"
+                  >
+                    <div className="flex items-center gap-3">
+                      <LogOut className="w-5 h-5 opacity-80" />
+                      <span className="font-semibold text-[15px]">Déconnexion de l'application</span>
                     </div>
                   </button>
                 </div>
