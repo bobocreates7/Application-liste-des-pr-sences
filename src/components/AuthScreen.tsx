@@ -51,7 +51,7 @@ export default function AuthScreen({ onLogin }: AuthScreenProps) {
           <LogIn className="w-10 h-10 transform translate-x-[-2px]" />
         </div>
         
-        <h1 className="text-2xl font-black text-gray-900 dark:text-white mb-2">CES2026</h1>
+        <h1 className="text-2xl font-black text-gray-900 dark:text-white mb-2">CESCOM</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">
           Veuillez vous connecter pour accéder à l'application.
         </p>
