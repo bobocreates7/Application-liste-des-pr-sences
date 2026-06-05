@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowLeft, Check, Search, Folder, X, Calendar as CalendarIcon } from 'lucide-react';
 import { Class, Student, AbsentRecord, DailyAttendance } from '../types';
+import { UserRole } from './PortalSelect';
 
 interface ClassAttendanceProps {
   classData: Class;
@@ -10,6 +11,7 @@ interface ClassAttendanceProps {
   onBack: () => void;
   onUpdateStatus: (studentId: string, isAbsent: boolean) => void;
   onValidate: (classId: string) => void;
+  role: UserRole;
 }
 
 export default function ClassAttendance({ 
@@ -19,7 +21,8 @@ export default function ClassAttendance({
   attendances,
   onBack, 
   onUpdateStatus, 
-  onValidate 
+  onValidate,
+  role
 }: ClassAttendanceProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStudentForAbsences, setSelectedStudentForAbsences] = useState<Student | null>(null);
@@ -100,22 +103,24 @@ export default function ClassAttendance({
                     
                     <div className="flex gap-1.5">
                       <button
-                        onClick={() => onUpdateStatus(student.id, false)}
+                        onClick={() => role === 'prefet' && onUpdateStatus(student.id, false)}
+                        disabled={role === 'prof'}
                         className={`w-11 h-11 rounded-xl flex items-center justify-center text-base font-bold transition-all ${
                           !isAbsent 
                             ? 'bg-[#43A047] text-white shadow-md scale-105' 
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600'
-                        }`}
+                        } ${role === 'prof' ? 'opacity-70 cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700' : ''}`}
                       >
                         P
                       </button>
                       <button
-                        onClick={() => onUpdateStatus(student.id, true)}
+                        onClick={() => role === 'prefet' && onUpdateStatus(student.id, true)}
+                        disabled={role === 'prof'}
                         className={`w-11 h-11 rounded-xl flex items-center justify-center text-base font-bold transition-all ${
                           isAbsent 
                             ? 'bg-[#E53935] text-white shadow-md scale-105' 
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600'
-                        }`}
+                        } ${role === 'prof' ? 'opacity-70 cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700' : ''}`}
                       >
                         A
                       </button>
@@ -129,8 +134,8 @@ export default function ClassAttendance({
       </main>
 
       {/* Floating Footer */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-gray-50 dark:from-gray-900 via-gray-50 dark:via-gray-900 to-transparent pt-10">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-3 flex flex-col gap-2">
+      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-gray-50 dark:from-gray-900 via-gray-50 dark:via-gray-900 to-transparent pt-10 pointer-events-none">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-3 flex flex-col gap-2 pointer-events-auto">
           <div className="flex justify-between items-center px-2">
             <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">Total Absents</span>
             <span className={`text-lg font-bold ${absentCount > 0 ? 'text-[#E53935] dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
@@ -138,13 +143,15 @@ export default function ClassAttendance({
             </span>
           </div>
           
-          <button
-            onClick={() => onValidate(classData.id)}
-            className="w-full bg-[#1A73E8] hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl py-3 text-base font-bold flex items-center justify-center gap-2 transition-colors shadow-md"
-          >
-            <Check className="w-5 h-5" />
-            Valider la classe
-          </button>
+          {role === 'prefet' && (
+            <button
+              onClick={() => onValidate(classData.id)}
+              className="w-full bg-[#1A73E8] hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl py-3 text-base font-bold flex items-center justify-center gap-2 transition-colors shadow-md"
+            >
+              <Check className="w-5 h-5" />
+              Valider la classe
+            </button>
+          )}
         </div>
       </div>
 

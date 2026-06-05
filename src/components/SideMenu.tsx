@@ -1,14 +1,17 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Moon, Sun, Mail, Info } from 'lucide-react';
+import { X, Moon, Sun, Mail, Info, LogOut } from 'lucide-react';
+import { UserRole } from './PortalSelect';
 
 interface SideMenuProps {
   isOpen: boolean;
   onClose: () => void;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
+  role?: UserRole | null;
+  onLogout: () => void;
 }
 
-export default function SideMenu({ isOpen, onClose, isDarkMode, toggleDarkMode }: SideMenuProps) {
+export default function SideMenu({ isOpen, onClose, isDarkMode, toggleDarkMode, role, onLogout }: SideMenuProps) {
   // Optionnel: ajout du geste swipe à droite pour fermer plus tard,
   // mais la consigne demande un swipe gauche pour ouvrir (ce qui doit être géré au niveau app),
   // et on peut glisser à droite pour fermer le menu.
@@ -50,6 +53,25 @@ export default function SideMenu({ isOpen, onClose, isDarkMode, toggleDarkMode }
             </div>
 
             <div className="flex-1 p-4 flex flex-col gap-6 overflow-y-auto">
+              <div className="flex flex-col gap-2">
+                <p className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1 px-1">Session</p>
+                
+                <div className="bg-white dark:bg-gray-800/80 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-100 dark:border-gray-700/50">
+                  <button 
+                    onClick={() => {
+                        onLogout();
+                        onClose();
+                    }}
+                    className="w-full flex items-center justify-between p-4 transition-colors text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-2xl"
+                  >
+                    <div className="flex items-center gap-3">
+                      <LogOut className="w-5 h-5" />
+                      <span className="font-semibold text-[15px]">Changer de profil ({role === 'prefet' ? 'Préfet' : 'Professeur'})</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
               <div className="flex flex-col gap-2">
                 <p className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1 px-1">Préférences</p>
                 

@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef, useLayoutEffect } from 'react';
 import { Search, MapPin, CheckCircle2, Circle, Calendar as CalendarIcon, Menu, X, Folder } from 'lucide-react';
 import { Class, DailyAttendance, Student } from '../types';
+import { UserRole } from './PortalSelect';
 
 let dashboardScrollPos = 0;
 
@@ -16,6 +17,7 @@ interface DashboardProps {
   setFilter: (f: 'all' | 'todo' | 'done') => void;
   searchTerm: string;
   setSearchTerm: (s: string) => void;
+  role: UserRole;
 }
 
 export default function Dashboard({ 
@@ -29,7 +31,8 @@ export default function Dashboard({
   filter,
   setFilter,
   searchTerm,
-  setSearchTerm
+  setSearchTerm,
+  role
 }: DashboardProps) {
 
   const [selectedStudentForAbsences, setSelectedStudentForAbsences] = useState<Student | null>(null);

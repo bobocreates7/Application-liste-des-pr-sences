@@ -16,6 +16,7 @@ export interface AbsentRecord {
 }
 
 export interface DailyAttendance {
+  id?: string;
   date: string; // YYYY-MM-DD
   classId: string;
   isDone: boolean;

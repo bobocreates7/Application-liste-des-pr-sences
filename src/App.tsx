@@ -12,7 +12,7 @@ import { SplashScreen } from '@capacitor/splash-screen';
 import { AnimatePresence, motion } from 'motion/react';
 import { Home, Users, FileBarChart, Bell } from 'lucide-react';
 import { Class, Student, DailyAttendance } from './types';
-import { initialClasses, initialStudents, initialAttendances } from './data';
+import { initialClasses } from './data';
 import Dashboard from './components/Dashboard';
 import ClassAttendance from './components/ClassAttendance';
 import GlobalReport from './components/GlobalReport';
@@ -20,11 +20,16 @@ import DataManagement from './components/DataManagement';
 import Notifications from './components/Notifications';
 import SideMenu from './components/SideMenu';
 import { NotificationService } from './services/notificationService';
+import PortalSelect, { UserRole } from './components/PortalSelect';
+
+// Firebase imports
+import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { db } from './firebase';
 
 export type TabType = 'home' | 'students' | 'reports' | 'notifications';
 
 export default function App() {
-  const [classes, setClasses] = useState<Class[]>([]);
+  const [classes, setClasses] = useState<Class[]>(initialClasses);
   const [students, setStudents] = useState<Student[]>([]);
   const [attendances, setAttendances] = useState<DailyAttendance[]>([]);
   
@@ -35,6 +40,8 @@ export default function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [filter, setFilter] = useState<'all' | 'todo' | 'done'>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  const [role, setRole] = useState<UserRole | null>(null);
 
   // Initialize StatusBar and BackButton
   useEffect(() => {
@@ -72,34 +79,72 @@ export default function App() {
     };
   }, [isMenuOpen, selectedClassId, activeTab, filter, searchTerm]);
 
-  // Load from localStorage on mount
+  // Load portal role
   useEffect(() => {
-    const storedStudents = localStorage.getItem('app_students');
-    const storedAttendances = localStorage.getItem('app_attendances');
+    const storedRole = localStorage.getItem('app_portal_role') as UserRole | null;
+    if (storedRole) {
+      setRole(storedRole);
+    }
     
     if (!localStorage.getItem('cescom_first_open_date')) {
       const d = new Date();
-      // For testing, one could do: d.setDate(d.getDate() - 3);
       localStorage.setItem('cescom_first_open_date', d.toISOString().split('T')[0]);
-    }
-
-    // Always use the latest classes from data.ts
-    setClasses(initialClasses);
-
-    if (storedStudents) {
-      setStudents(JSON.parse(storedStudents));
-      if (storedAttendances) setAttendances(JSON.parse(storedAttendances));
-    } else {
-      setStudents(initialStudents);
-      setAttendances(initialAttendances);
     }
   }, []);
 
-  // Save to localStorage when state changes
+  // Sync data with Firebase
   useEffect(() => {
-    localStorage.setItem('app_students', JSON.stringify(students));
-    localStorage.setItem('app_attendances', JSON.stringify(attendances));
-  }, [students, attendances]);
+    let syncedStudents = false;
+    let syncedAttendances = false;
+
+    const unsubscribeStudents = onSnapshot(collection(db, 'students'), (snapshot) => {
+      const studs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
+      if (!syncedStudents && studs.length === 0) {
+        // Migration from local storage
+        const localStuds = localStorage.getItem('app_students');
+        if (localStuds) {
+          const parsedStuds = JSON.parse(localStuds) as Student[];
+          if (parsedStuds.length > 0) {
+            const batch = writeBatch(db);
+            parsedStuds.forEach(s => batch.set(doc(db, 'students', s.id), s));
+            batch.commit();
+          }
+        }
+      }
+      syncedStudents = true;
+      setStudents(studs);
+    }, (error) => {
+      console.error("Students sync error", error);
+    });
+
+    const unsubscribeAttendances = onSnapshot(collection(db, 'attendances'), (snapshot) => {
+      const atts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DailyAttendance));
+      if (!syncedAttendances && atts.length === 0) {
+        // Migration from local storage
+        const localAtts = localStorage.getItem('app_attendances');
+        if (localAtts) {
+          const parsedAtts = JSON.parse(localAtts) as DailyAttendance[];
+          if (parsedAtts.length > 0) {
+             const batch = writeBatch(db);
+             parsedAtts.forEach(a => {
+               const id = a.id || `${a.classId}_${a.date}`;
+               batch.set(doc(db, 'attendances', id), { ...a, id });
+             });
+             batch.commit();
+          }
+        }
+      }
+      syncedAttendances = true;
+      setAttendances(atts);
+    }, (error) => {
+      console.error("Attendances sync error", error);
+    });
+
+    return () => {
+      unsubscribeStudents();
+      unsubscribeAttendances();
+    };
+  }, []);
 
   // Schedule notifications for overdue tasks
   useEffect(() => {
@@ -137,76 +182,93 @@ export default function App() {
     absents: []
   };
 
-  const handleUpdateStudentStatus = (studentId: string, isAbsent: boolean) => {
+  const handleUpdateStudentStatus = async (studentId: string, isAbsent: boolean) => {
     if (!selectedClassId) return;
 
-    setAttendances(prev => {
-      const existingIndex = prev.findIndex(a => a.classId === selectedClassId && a.date === currentDate);
-      
-      let newAbsents = [...currentAttendance.absents];
-      
-      if (isAbsent) {
-        // Add or update absent record
-        const existingAbsentIndex = newAbsents.findIndex(a => a.studentId === studentId);
-        if (existingAbsentIndex >= 0) {
-          newAbsents[existingAbsentIndex] = { studentId };
-        } else {
-          newAbsents.push({ studentId });
+    const existingAttendance = attendances.find(a => a.classId === selectedClassId && a.date === currentDate);
+    let newAbsents = [...currentAttendance.absents];
+    
+    if (isAbsent) {
+      const existingAbsentIndex = newAbsents.findIndex(a => a.studentId === studentId);
+      if (existingAbsentIndex >= 0) {
+        newAbsents[existingAbsentIndex] = { studentId };
+      } else {
+        newAbsents.push({ studentId });
+      }
+    } else {
+      newAbsents = newAbsents.filter(a => a.studentId !== studentId);
+    }
+
+    const attendanceId = existingAttendance?.id || `${selectedClassId}_${currentDate}`;
+    const newAttendance = {
+      ...currentAttendance,
+      id: attendanceId,
+      absents: newAbsents
+    };
+
+    try {
+      await setDoc(doc(db, 'attendances', attendanceId), newAttendance);
+    } catch (e) {
+      console.error(e);
+      toast.error('Erreur de synchronisation');
+    }
+  };
+
+  const handleValidateClass = async (classId: string) => {
+    const existingAttendance = attendances.find(a => a.classId === classId && a.date === currentDate);
+    const now = new Date().toISOString();
+    const attendanceId = existingAttendance?.id || `${classId}_${currentDate}`;
+    
+    const newAttendance = {
+      ...(existingAttendance || { date: currentDate, classId, absents: [] }),
+      id: attendanceId,
+      isDone: true,
+      completedAt: now
+    };
+
+    try {
+      await setDoc(doc(db, 'attendances', attendanceId), newAttendance);
+      const absentCount = newAttendance.absents.length;
+
+      toast.success('Appel validé et synchronisé !', {
+        description: `${absentCount} absent(s) signalé(s).`,
+        style: {
+          background: '#43A047',
+          color: 'white',
+          border: 'none',
         }
-      } else {
-        // Remove absent record
-        newAbsents = newAbsents.filter(a => a.studentId !== studentId);
-      }
+      });
 
-      const newAttendance: DailyAttendance = {
-        ...currentAttendance,
-        absents: newAbsents
-      };
-
-      if (existingIndex >= 0) {
-        const newAttendances = [...prev];
-        newAttendances[existingIndex] = newAttendance;
-        return newAttendances;
-      } else {
-        return [...prev, newAttendance];
-      }
-    });
+      setSelectedClassId(null);
+    } catch (e) {
+      console.error(e);
+      toast.error('Erreur de synchronisation');
+    }
   };
 
-  const handleValidateClass = (classId: string) => {
-    setAttendances(prev => {
-      const existingIndex = prev.findIndex(a => a.classId === classId && a.date === currentDate);
-      const now = new Date().toISOString();
-      
-      if (existingIndex >= 0) {
-        const newAttendances = [...prev];
-        newAttendances[existingIndex] = { ...newAttendances[existingIndex], isDone: true, completedAt: now };
-        return newAttendances;
-      } else {
-        return [...prev, { date: currentDate, classId, isDone: true, absents: [], completedAt: now }];
-      }
-    });
-
-    const absentCount = currentAttendance.absents.length;
-
-    toast.success('Appel validé et synchronisé !', {
-      description: `${absentCount} absent(s) signalé(s).`,
-      style: {
-        background: '#43A047',
-        color: 'white',
-        border: 'none',
-      }
-    });
-
-    setSelectedClassId(null);
+  const handleAddStudents = async (newStudents: Student[]) => {
+    try {
+      const batch = writeBatch(db);
+      newStudents.forEach(student => {
+        const studentRef = doc(db, 'students', student.id);
+        batch.set(studentRef, student);
+      });
+      await batch.commit();
+      toast.success('Élèves ajoutés avec succès');
+    } catch (e) {
+      console.error(e);
+      toast.error("Erreur lors de l'ajout");
+    }
   };
 
-  const handleAddStudents = (newStudents: Student[]) => {
-    setStudents(prev => [...prev, ...newStudents]);
-  };
-
-  const handleDeleteStudent = (studentId: string) => {
-    setStudents(prev => prev.filter(s => s.id !== studentId));
+  const handleDeleteStudent = async (studentId: string) => {
+    try {
+      await deleteDoc(doc(db, 'students', studentId));
+      toast.success('Élève supprimé');
+    } catch (e) {
+      console.error(e);
+      toast.error('Erreur lors de la suppression');
+    }
   };
 
   const getUncompletedCount = () => {
@@ -238,6 +300,21 @@ export default function App() {
 
   const uncompletedCount = getUncompletedCount();
 
+  const handleRoleSelect = (selectedRole: UserRole) => {
+    setRole(selectedRole);
+    localStorage.setItem('app_portal_role', selectedRole);
+  };
+
+  const handleLogout = () => {
+    setRole(null);
+    localStorage.removeItem('app_portal_role');
+    setActiveTab('home');
+  };
+
+  if (!role) {
+    return <PortalSelect onSelectRole={handleRoleSelect} />;
+  }
+
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-100'} text-gray-900 dark:text-gray-100 font-sans selection:bg-[#1A73E8] selection:text-white overflow-hidden flex flex-col`}>
       <SideMenu 
@@ -245,6 +322,8 @@ export default function App() {
         onClose={() => setIsMenuOpen(false)} 
         isDarkMode={isDarkMode}
         toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+        role={role}
+        onLogout={handleLogout}
       />
 
       <div className="flex-1 relative overflow-hidden">
@@ -259,6 +338,7 @@ export default function App() {
                 onBack={handleBackToDashboard}
                 onUpdateStatus={handleUpdateStudentStatus}
                 onValidate={handleValidateClass}
+                role={role}
               />
             </motion.div>
           ) : (
@@ -277,6 +357,7 @@ export default function App() {
                     setFilter={setFilter}
                     searchTerm={searchTerm}
                     setSearchTerm={setSearchTerm}
+                    role={role}
                   />
                 )}
                 {activeTab === 'students' && (
@@ -285,6 +366,7 @@ export default function App() {
                     students={students}
                     onAddStudents={handleAddStudents}
                     onDeleteStudent={handleDeleteStudent}
+                    role={role}
                   />
                 )}
                 {activeTab === 'reports' && (

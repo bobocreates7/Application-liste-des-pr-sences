@@ -3,12 +3,14 @@ import { Class, Student } from '../types';
 import { Users, Plus, Trash2, ClipboardPaste, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
+import { UserRole } from './PortalSelect';
 
 interface DataManagementProps {
   classes: Class[];
   students: Student[];
   onAddStudents: (students: Student[]) => void;
   onDeleteStudent: (studentId: string) => void;
+  role: UserRole;
 }
 
 const generateId = () => {
@@ -17,7 +19,7 @@ const generateId = () => {
     : Math.random().toString(36).substring(2, 15);
 };
 
-export default function DataManagement({ classes, students, onAddStudents, onDeleteStudent }: DataManagementProps) {
+export default function DataManagement({ classes, students, onAddStudents, onDeleteStudent, role }: DataManagementProps) {
   const [selectedClassId, setSelectedClassId] = useState<string>(classes[0]?.id || '');
   const [bulkText, setBulkText] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -114,72 +116,88 @@ export default function DataManagement({ classes, students, onAddStudents, onDel
       {/* Header */}
       <header className="bg-[#1A73E8] text-white p-4 shadow-md z-10 sticky top-0 flex justify-between items-center">
         <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
-          Gérer les élèves
+          {role === 'prefet' ? 'Gérer les élèves' : 'Liste des élèves'}
         </h1>
       </header>
 
       <div className="flex flex-col md:flex-row flex-1 overflow-y-auto md:overflow-hidden pb-3">
           {/* Left side: Add students */}
-          <div className="p-4 border-b md:border-b-0 md:border-r border-gray-100 dark:border-gray-800 md:w-1/2 flex flex-col gap-3 shrink-0 md:overflow-y-auto">
-            <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Classe</label>
-              <select 
-                value={selectedClassId}
-                onChange={(e) => setSelectedClassId(e.target.value)}
-                className="w-full border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-              >
-                {classes.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex-1 flex flex-col">
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
-                  <ClipboardPaste className="w-3.5 h-3.5" />
-                  Liste des élèves
-                </label>
-                
-                <input 
-                   type="file" 
-                   ref={fileInputRef}
-                   accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                   className="hidden"
-                   onChange={handleFileUpload}
-                />
-                <button 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-1.5 bg-[#1A73E8] hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm"
+          {role === 'prefet' && (
+            <div className="p-4 border-b md:border-b-0 md:border-r border-gray-100 dark:border-gray-800 md:w-1/2 flex flex-col gap-3 shrink-0 md:overflow-y-auto">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Classe</label>
+                <select 
+                  value={selectedClassId}
+                  onChange={(e) => setSelectedClassId(e.target.value)}
+                  className="w-full border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 >
-                  <Upload className="w-3.5 h-3.5" />
-                  Importer Excel/CSV
-                </button>
+                  {classes.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
               </div>
-              
-              <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-2">
-                Copiez-collez ou importez un fichier. Format : Nom Prénom (un élève par ligne).
-              </p>
-              <textarea
-                value={bulkText}
-                onChange={(e) => setBulkText(e.target.value)}
-                placeholder="DUPONT Jean&#10;MARTIN Sophie"
-                className="w-full flex-1 min-h-[150px] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-              />
-            </div>
 
-            <button
-              onClick={handleBulkAdd}
-              disabled={!bulkText.trim() || !selectedClassId}
-              className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-white py-2.5 px-4 rounded-xl text-sm font-medium transition-colors mt-1"
-            >
-              <Plus className="w-4 h-4" />
-              Ajouter à la classe
-            </button>
-          </div>
+              <div className="flex-1 flex flex-col">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                    <ClipboardPaste className="w-3.5 h-3.5" />
+                    Ajouter des élèves
+                  </label>
+                  
+                  <input 
+                     type="file" 
+                     ref={fileInputRef}
+                     accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                     className="hidden"
+                     onChange={handleFileUpload}
+                  />
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-1.5 bg-[#1A73E8] hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    Importer Excel/CSV
+                  </button>
+                </div>
+                
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-2">
+                  Copiez-collez ou importez un fichier. Format : Nom Prénom (un élève par ligne).
+                </p>
+                <textarea
+                  value={bulkText}
+                  onChange={(e) => setBulkText(e.target.value)}
+                  placeholder="DUPONT Jean&#10;MARTIN Sophie"
+                  className="w-full flex-1 min-h-[150px] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                />
+              </div>
+
+              <button
+                onClick={handleBulkAdd}
+                disabled={!bulkText.trim() || !selectedClassId}
+                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-white py-2.5 px-4 rounded-xl text-sm font-medium transition-colors mt-1"
+              >
+                <Plus className="w-4 h-4" />
+                Ajouter à la classe
+              </button>
+            </div>
+          )}
 
           {/* Right side: Current students */}
-          <div className="p-4 md:w-1/2 flex flex-col bg-gray-50 dark:bg-gray-900 md:overflow-hidden">
+          <div className={`p-4 ${role === 'prefet' ? 'md:w-1/2' : 'w-full'} flex flex-col bg-gray-50 dark:bg-gray-900 md:overflow-hidden`}>
+            {role === 'prof' && (
+              <div className="mb-4">
+                <select 
+                  value={selectedClassId}
+                  onChange={(e) => setSelectedClassId(e.target.value)}
+                  className="w-full border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                >
+                  {classes.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            
             <h3 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2.5 flex justify-between items-center shrink-0">
               <span>Élèves dans cette classe</span>
               <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 py-0.5 px-2 rounded-full text-[10px] font-bold">
@@ -192,7 +210,7 @@ export default function DataManagement({ classes, students, onAddStudents, onDel
                 <div className="text-center py-8 text-gray-400 dark:text-gray-500 text-xs bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
                   Aucun élève dans cette classe.
                   <br />
-                  <span className="text-[10px] mt-1 block">Utilisez le formulaire pour en ajouter.</span>
+                  {role === 'prefet' && <span className="text-[10px] mt-1 block">Utilisez le formulaire pour en ajouter.</span>}
                 </div>
               ) : (
                 classStudents.map(student => (
@@ -200,13 +218,15 @@ export default function DataManagement({ classes, students, onAddStudents, onDel
                     <span className="font-medium text-gray-900 dark:text-white text-sm">
                       {student.lastName} <span className="text-gray-600 dark:text-gray-400 font-normal">{student.firstName}</span>
                     </span>
-                    <button 
-                      onClick={() => onDeleteStudent(student.id)}
-                      className="text-gray-400 hover:text-red-500 p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
-                      title="Supprimer l'élève"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {role === 'prefet' && (
+                      <button 
+                        onClick={() => onDeleteStudent(student.id)}
+                        className="text-gray-400 hover:text-red-500 p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                        title="Supprimer l'élève"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 ))
               )}

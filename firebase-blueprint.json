@@ -1,0 +1,58 @@
+{
+  "entities": {
+    "Class": {
+      "title": "Class",
+      "description": "A school class",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "building": { "type": "string" }
+      },
+      "required": ["id", "name", "building"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "A student",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "lastName": { "type": "string" },
+        "firstName": { "type": "string" },
+        "classId": { "type": "string" }
+      },
+      "required": ["id", "lastName", "firstName", "classId"]
+    },
+    "DailyAttendance": {
+      "title": "Daily Attendance",
+      "description": "Attendance record for a class on a specific date",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "classId": { "type": "string" },
+        "isDone": { "type": "boolean" },
+        "absents": { 
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "completedAt": { "type": "string" }
+      },
+      "required": ["id", "date", "classId", "isDone", "absents"]
+    }
+  },
+  "firestore": {
+    "classes/{classId}": {
+      "schema": { "$ref": "#/entities/Class" },
+      "description": "Classes collection"
+    },
+    "students/{studentId}": {
+      "schema": { "$ref": "#/entities/Student" },
+      "description": "Students collection"
+    },
+    "attendances/{attendanceId}": {
+      "schema": { "$ref": "#/entities/DailyAttendance" },
+      "description": "Attendances collection"
+    }
+  }
+}
