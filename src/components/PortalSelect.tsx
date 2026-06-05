@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, ShieldAlert, ArrowRight, Lock } from 'lucide-react';
+import { User, ShieldAlert, ArrowRight, Lock, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 
@@ -12,6 +12,7 @@ interface PortalSelectProps {
 export default function PortalSelect({ onSelectRole }: PortalSelectProps) {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleConfirm = () => {
     if (selectedRole === 'prof') {
@@ -82,12 +83,19 @@ export default function PortalSelect({ onSelectRole }: PortalSelectProps) {
                   <Lock className="h-4 w-4 text-gray-400" />
                 </div>
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Entrez le code"
-                  className="block w-full pl-10 pr-3 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-transparent focus:border-[#1A73E8] dark:focus:border-[#3B82F6] font-mono transition-colors"
+                  className="block w-full pl-10 pr-12 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-transparent focus:border-[#1A73E8] dark:focus:border-[#3B82F6] font-mono transition-colors"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
             </motion.div>
           )}

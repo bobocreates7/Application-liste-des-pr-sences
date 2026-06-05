@@ -21,10 +21,12 @@ import Notifications from './components/Notifications';
 import SideMenu from './components/SideMenu';
 import { NotificationService } from './services/notificationService';
 import PortalSelect, { UserRole } from './components/PortalSelect';
+import AuthScreen from './components/AuthScreen';
 
 // Firebase imports
 import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch } from 'firebase/firestore';
-import { db } from './firebase';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { db, auth } from './firebase';
 
 export type TabType = 'home' | 'students' | 'reports' | 'notifications';
 
@@ -42,6 +44,8 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   
   const [role, setRole] = useState<UserRole | null>(null);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   // Initialize StatusBar and BackButton
   useEffect(() => {
@@ -90,6 +94,18 @@ export default function App() {
       const d = new Date();
       localStorage.setItem('cescom_first_open_date', d.toISOString().split('T')[0]);
     }
+    
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setAuthLoading(false);
+      // Automatically clear role if logged out
+      if (!currentUser) {
+        setRole(null);
+        localStorage.removeItem('app_portal_role');
+      }
+    });
+    
+    return () => unsubscribeAuth();
   }, []);
 
   // Sync data with Firebase
@@ -206,12 +222,10 @@ export default function App() {
       absents: newAbsents
     };
 
-    try {
-      await setDoc(doc(db, 'attendances', attendanceId), newAttendance);
-    } catch (e) {
+    setDoc(doc(db, 'attendances', attendanceId), newAttendance).catch(e => {
       console.error(e);
-      toast.error('Erreur de synchronisation');
-    }
+      toast.error('Erreur de synchronisation en arrière-plan');
+    });
   };
 
   const handleValidateClass = async (classId: string) => {
@@ -226,24 +240,23 @@ export default function App() {
       completedAt: now
     };
 
-    try {
-      await setDoc(doc(db, 'attendances', attendanceId), newAttendance);
-      const absentCount = newAttendance.absents.length;
-
-      toast.success('Appel validé et synchronisé !', {
-        description: `${absentCount} absent(s) signalé(s).`,
-        style: {
-          background: '#43A047',
-          color: 'white',
-          border: 'none',
-        }
-      });
-
-      setSelectedClassId(null);
-    } catch (e) {
+    setDoc(doc(db, 'attendances', attendanceId), newAttendance).catch(e => {
       console.error(e);
-      toast.error('Erreur de synchronisation');
-    }
+      toast.error('Erreur de synchronisation en arrière-plan');
+    });
+
+    const absentCount = newAttendance.absents.length;
+
+    toast.success('Appel validé et synchronisé !', {
+      description: `${absentCount} absent(s) signalé(s).`,
+      style: {
+        background: '#43A047',
+        color: 'white',
+        border: 'none',
+      }
+    });
+
+    setSelectedClassId(null);
   };
 
   const handleAddStudents = async (newStudents: Student[]) => {
@@ -305,11 +318,28 @@ export default function App() {
     localStorage.setItem('app_portal_role', selectedRole);
   };
 
-  const handleLogout = () => {
-    setRole(null);
-    localStorage.removeItem('app_portal_role');
-    setActiveTab('home');
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      setRole(null);
+      localStorage.removeItem('app_portal_role');
+      setActiveTab('home');
+    } catch (e) {
+      console.error('Logout error', e);
+    }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-4 border-[#1A73E8] border-t-transparent animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthScreen />;
+  }
 
   if (!role) {
     return <PortalSelect onSelectRole={handleRoleSelect} />;
