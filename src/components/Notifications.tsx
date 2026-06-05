@@ -12,12 +12,28 @@ interface NotificationsProps {
 export default function Notifications({ classes, attendances, onDateChange, onClose }: NotificationsProps) {
   const recentWorkingDays = useMemo(() => {
     const dates = [];
-    let d = new Date();
-    const dayOfWeek = d.getDay();
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-      dates.push(d.toISOString().split('T')[0]);
+    const firstOpenStr = localStorage.getItem('cescom_first_open_date') || new Date().toISOString().split('T')[0];
+    const firstOpenDate = new Date(firstOpenStr);
+    
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    let d = new Date(firstOpenDate);
+    d.setHours(0,0,0,0);
+    
+    // limit to reasonable loop count to prevent infinite loop just in case
+    let failsafe = 0;
+    while (d <= today && failsafe < 365) {
+      const dayOfWeek = d.getDay();
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        dates.push(d.toISOString().split('T')[0]);
+      }
+      d.setDate(d.getDate() + 1);
+      failsafe++;
     }
-    return dates;
+    
+    // Reverse to show newest first
+    return dates.reverse();
   }, []);
 
   const notificationItems = useMemo(() => {

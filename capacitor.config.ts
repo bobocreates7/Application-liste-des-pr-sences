@@ -6,14 +6,15 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   plugins: {
     LocalNotifications: {
-      smallIcon: "",
-      
+      smallIcon: "ic_launcher_round",
+      iconColor: "#1A73E8"
     },
     SplashScreen: {
-      launchShowDuration: 2000,
+      launchShowDuration: 3000,
       launchAutoHide: false,
-      backgroundColor: "#FFFFFF",
+      backgroundColor: "#1A73E8",
       androidSplashResourceName: "splash",
+      androidScaleType: "CENTER_CROP",
       showSpinner: false,
       splashFullScreen: true,
       splashImmersive: true,

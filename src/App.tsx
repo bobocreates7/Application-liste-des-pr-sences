@@ -76,6 +76,12 @@ export default function App() {
   useEffect(() => {
     const storedStudents = localStorage.getItem('app_students');
     const storedAttendances = localStorage.getItem('app_attendances');
+    
+    if (!localStorage.getItem('cescom_first_open_date')) {
+      const d = new Date();
+      // For testing, one could do: d.setDate(d.getDate() - 3);
+      localStorage.setItem('cescom_first_open_date', d.toISOString().split('T')[0]);
+    }
 
     // Always use the latest classes from data.ts
     setClasses(initialClasses);
@@ -205,14 +211,27 @@ export default function App() {
 
   const getUncompletedCount = () => {
     let missedDays = 0;
-    const d = new Date();
-    const dayOfWeek = d.getDay();
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) { // skip weekends
-        const dateStr = d.toISOString().split('T')[0];
-        const completedCount = attendances.filter(a => a.date === dateStr && a.isDone).length;
-        if (completedCount < classes.length) {
-            missedDays++;
-        }
+    const firstOpenStr = localStorage.getItem('cescom_first_open_date') || new Date().toISOString().split('T')[0];
+    const firstOpenDate = new Date(firstOpenStr);
+    
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    let d = new Date(firstOpenDate);
+    d.setHours(0,0,0,0);
+    
+    let failsafe = 0;
+    while (d <= today && failsafe < 365) {
+      const dayOfWeek = d.getDay();
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) { // skip weekends
+          const dateStr = d.toISOString().split('T')[0];
+          const completedCount = attendances.filter(a => a.date === dateStr && a.isDone).length;
+          if (completedCount < classes.length) {
+              missedDays++;
+          }
+      }
+      d.setDate(d.getDate() + 1);
+      failsafe++;
     }
     return missedDays;
   };

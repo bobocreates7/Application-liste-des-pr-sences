@@ -205,7 +205,7 @@ export default function GlobalReport({
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 flex-1 relative">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 flex-1 relative">
       {/* Header */}
       <header className="bg-[#1A73E8] text-white p-4 shadow-md z-10 sticky top-0 flex flex-col gap-3">
         <h1 className="text-xl font-bold tracking-tight">Rapport Global</h1>
@@ -230,32 +230,32 @@ export default function GlobalReport({
 
       <main className="flex-1 overflow-y-auto p-3 pb-24">
         {/* Summary Card */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-4 text-center">
-          <p className="text-gray-500 text-sm font-medium mb-1 capitalize">{formattedDate}</p>
-          <h2 className="text-3xl font-black text-[#E53935] mb-1">{totalAbsents}</h2>
-          <p className="text-gray-700 text-sm font-medium">Élèves absents au total</p>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 mb-4 text-center">
+          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-1 capitalize">{formattedDate}</p>
+          <h2 className="text-3xl font-black text-[#E53935] dark:text-red-400 mb-1">{totalAbsents}</h2>
+          <p className="text-gray-700 dark:text-gray-300 text-sm font-medium">Élèves absents au total</p>
         </div>
 
         {/* Detailed List */}
         <div className="space-y-3">
-          <h3 className="font-bold text-gray-900 text-base flex items-center gap-1.5">
-            <FileText className="w-4 h-4 text-[#1A73E8]" />
+          <h3 className="font-bold text-gray-900 dark:text-white text-base flex items-center gap-1.5">
+            <FileText className="w-4 h-4 text-[#1A73E8] dark:text-[#3B82F6]" />
             Détail des absences
           </h3>
           
           {absentDetails.length === 0 ? (
-            <div className="bg-white rounded-xl p-6 text-center border border-gray-100 shadow-sm">
-              <p className="text-gray-500 text-sm">Aucun absent signalé pour cette date.</p>
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 text-center border border-gray-100 dark:border-gray-700 shadow-sm">
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Aucun absent signalé pour cette date.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-100">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden divide-y divide-gray-100 dark:divide-gray-700">
               {absentDetails.map((detail, idx) => (
                 <div key={idx} className="p-3 flex flex-col gap-1">
                   <div className="flex justify-between items-start">
-                    <p className="font-bold text-gray-900 text-sm uppercase">
-                      {detail.student!.lastName} <span className="capitalize font-medium text-gray-700">{detail.student!.firstName}</span>
+                    <p className="font-bold text-gray-900 dark:text-white text-sm uppercase">
+                      {detail.student!.lastName} <span className="capitalize font-medium text-gray-700 dark:text-gray-300">{detail.student!.firstName}</span>
                     </p>
-                    <span className="bg-gray-100 text-gray-700 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                    <span className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-[10px] font-bold px-2 py-0.5 rounded-md">
                       {detail.className}
                     </span>
                   </div>
@@ -267,11 +267,11 @@ export default function GlobalReport({
       </main>
 
       {/* Floating Footer */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent pt-10">
+      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-gray-50 dark:from-gray-900 via-gray-50 dark:via-gray-900 to-transparent pt-10">
         <button
           onClick={handleExport}
           disabled={absentDetails.length === 0}
-          className="w-full bg-[#1A73E8] disabled:bg-gray-300 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl py-3 text-base font-bold flex items-center justify-center gap-2 transition-colors shadow-md"
+          className="w-full bg-[#1A73E8] disabled:bg-gray-300 dark:disabled:bg-gray-700 dark:disabled:text-gray-500 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl py-3 text-base font-bold flex items-center justify-center gap-2 transition-colors shadow-md"
         >
           <Download className="w-5 h-5" />
           Exporter en PDF
