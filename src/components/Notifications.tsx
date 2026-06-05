@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { CheckCircle2, Check, Bell } from 'lucide-react';
 import { Class, DailyAttendance } from '../types';
+import { getLocalYMD } from '../App';
 
 interface NotificationsProps {
   classes: Class[];
@@ -12,13 +13,19 @@ interface NotificationsProps {
 export default function Notifications({ classes, attendances, onDateChange, onClose }: NotificationsProps) {
   const recentWorkingDays = useMemo(() => {
     const dates = [];
-    const firstOpenStr = localStorage.getItem('cescom_first_open_date') || new Date().toISOString().split('T')[0];
-    const firstOpenDate = new Date(firstOpenStr);
+    
+    let startDateStr = getLocalYMD();
+    const stored = localStorage.getItem('cescom_first_open_date');
+    if (stored) startDateStr = stored;
     
     const today = new Date();
+    // Exclude today if it's before 10 AM, only display past days + today if >= 10AM
+    // Exception: If they explicitly marked something today before 10 AM, we still want to evaluate today,
+    // but typically the alert doesn't appear. Just showing the day is fine in the list.
+    // Let's just include today regardless in the list so they can see their progress.
     today.setHours(23, 59, 59, 999);
 
-    let d = new Date(firstOpenDate);
+    let d = new Date(startDateStr);
     d.setHours(0,0,0,0);
     
     // limit to reasonable loop count to prevent infinite loop just in case
@@ -26,7 +33,7 @@ export default function Notifications({ classes, attendances, onDateChange, onCl
     while (d <= today && failsafe < 365) {
       const dayOfWeek = d.getDay();
       if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-        dates.push(d.toISOString().split('T')[0]);
+        dates.push(getLocalYMD(d));
       }
       d.setDate(d.getDate() + 1);
       failsafe++;
@@ -34,7 +41,7 @@ export default function Notifications({ classes, attendances, onDateChange, onCl
     
     // Reverse to show newest first
     return dates.reverse();
-  }, []);
+  }, [attendances]);
 
   const notificationItems = useMemo(() => {
     return recentWorkingDays.map(date => {
@@ -67,7 +74,15 @@ export default function Notifications({ classes, attendances, onDateChange, onCl
     });
   }, [recentWorkingDays, classes, attendances]);
 
-  const missedDaysCount = notificationItems.filter(item => !item.isComplete).length;
+  const missedDaysCount = notificationItems.filter(item => {
+    if (item.isComplete) return false;
+    const today = new Date();
+    const todayStr = getLocalYMD(today);
+    if (item.date === todayStr && today.getHours() < 10) {
+      return false; // don't count today as missed if it's before 10 AM
+    }
+    return true;
+  }).length;
 
   return (
     <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 flex-1">

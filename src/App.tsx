@@ -29,14 +29,21 @@ import { db } from './firebase';
 
 export type TabType = 'home' | 'students' | 'reports' | 'notifications';
 
+export function getLocalYMD(d: Date = new Date()) {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export default function App() {
   const [classes, setClasses] = useState<Class[]>(initialClasses);
   const [students, setStudents] = useState<Student[]>([]);
   const [attendances, setAttendances] = useState<DailyAttendance[]>([]);
   
-  const [currentDate, setCurrentDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
-  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<TabType>('home');
+  const [currentDate, setCurrentDate] = useState<string>(() => getLocalYMD());
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(() => localStorage.getItem('app_selected_class'));
+  const [activeTab, setActiveTab] = useState<TabType>(() => (localStorage.getItem('app_active_tab') as TabType) || 'home');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [filter, setFilter] = useState<'all' | 'todo' | 'done'>('all');
@@ -91,7 +98,7 @@ export default function App() {
     
     if (!localStorage.getItem('cescom_first_open_date')) {
       const d = new Date();
-      localStorage.setItem('cescom_first_open_date', d.toISOString().split('T')[0]);
+      localStorage.setItem('cescom_first_open_date', getLocalYMD(d));
     }
     
     const storedAuth = localStorage.getItem('app_authenticated');
@@ -159,12 +166,24 @@ export default function App() {
   useEffect(() => {
     if (classes.length === 0) return;
     
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalYMD();
     const completedToday = attendances.filter(a => a.date === today && a.isDone);
     const pendingCount = classes.length - completedToday.length;
     
     NotificationService.scheduleOverdueReminder(pendingCount);
   }, [classes, attendances]);
+
+  useEffect(() => {
+    if (selectedClassId) {
+      localStorage.setItem('app_selected_class', selectedClassId);
+    } else {
+      localStorage.removeItem('app_selected_class');
+    }
+  }, [selectedClassId]);
+
+  useEffect(() => {
+    localStorage.setItem('app_active_tab', activeTab);
+  }, [activeTab]);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -308,20 +327,27 @@ export default function App() {
 
   const getUncompletedCount = () => {
     let missedDays = 0;
-    const firstOpenStr = localStorage.getItem('cescom_first_open_date') || new Date().toISOString().split('T')[0];
-    const firstOpenDate = new Date(firstOpenStr);
+    
+    // Begin calculating from the earliest attendance date, or today if none exist
+    let startDateStr = getLocalYMD();
+    const stored = localStorage.getItem('cescom_first_open_date');
+    if (stored) startDateStr = stored;
     
     const today = new Date();
+    // Exclude today if it's before 10:00 AM (because the alert hasn't triggered yet)
+    if (today.getHours() < 10) {
+      today.setDate(today.getDate() - 1);
+    }
     today.setHours(23, 59, 59, 999);
 
-    let d = new Date(firstOpenDate);
+    let d = new Date(startDateStr);
     d.setHours(0,0,0,0);
     
     let failsafe = 0;
     while (d <= today && failsafe < 365) {
       const dayOfWeek = d.getDay();
       if (dayOfWeek !== 0 && dayOfWeek !== 6) { // skip weekends
-          const dateStr = d.toISOString().split('T')[0];
+          const dateStr = getLocalYMD(d);
           const completedCount = attendances.filter(a => a.date === dateStr && a.isDone).length;
           if (completedCount < classes.length) {
               missedDays++;
@@ -343,6 +369,9 @@ export default function App() {
   const handleLogout = () => {
     setRole(null);
     localStorage.removeItem('app_portal_role');
+    localStorage.removeItem('app_active_tab');
+    localStorage.removeItem('app_selected_class');
+    setSelectedClassId(null);
     setActiveTab('home');
   };
 
@@ -351,6 +380,9 @@ export default function App() {
     localStorage.removeItem('app_authenticated');
     setRole(null);
     localStorage.removeItem('app_portal_role');
+    localStorage.removeItem('app_active_tab');
+    localStorage.removeItem('app_selected_class');
+    setSelectedClassId(null);
     setActiveTab('home');
   };
 

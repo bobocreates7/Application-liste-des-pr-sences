@@ -11,9 +11,25 @@ export default function AuthScreen({ onLogin }: AuthScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!navigator.onLine) {
+      toast.error('Connexion Internet requise', {
+        description: 'Vous êtes hors ligne. Veuillez vérifier votre connexion et réessayer.'
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    setIsLoading(false);
+
     if (email.trim() === 'mucobonus2@gmail.com' && password === 'bobo') {
       toast.success('Connexion réussie');
       onLogin();
@@ -32,10 +48,10 @@ export default function AuthScreen({ onLogin }: AuthScreenProps) {
         className="w-full max-w-sm bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 border border-gray-100 dark:border-gray-800 text-center"
       >
         <div className="w-20 h-20 bg-[#1A73E8]/10 dark:bg-[#3B82F6]/20 text-[#1A73E8] dark:text-[#3B82F6] rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-[#1A73E8]/20 dark:border-[#3B82F6]/30">
-          <LogIn className="w-10 h-10" />
+          <LogIn className="w-10 h-10 transform translate-x-[-2px]" />
         </div>
         
-        <h1 className="text-2xl font-black text-gray-900 dark:text-white mb-2">CESCOM LP</h1>
+        <h1 className="text-2xl font-black text-gray-900 dark:text-white mb-2">CES2026</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">
           Veuillez vous connecter pour accéder à l'application.
         </p>
@@ -54,6 +70,7 @@ export default function AuthScreen({ onLogin }: AuthScreenProps) {
                 placeholder="Ex: jean.dupont@email.com"
                 className="block w-full pl-10 pr-3 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-transparent focus:border-[#1A73E8] dark:focus:border-[#3B82F6] transition-colors"
                 required
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -71,11 +88,13 @@ export default function AuthScreen({ onLogin }: AuthScreenProps) {
                 placeholder="Votre mot de passe"
                 className="block w-full pl-10 pr-12 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-transparent focus:border-[#1A73E8] dark:focus:border-[#3B82F6] transition-colors"
                 required
+                disabled={isLoading}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none transition-colors"
+                disabled={isLoading}
               >
                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
@@ -84,9 +103,14 @@ export default function AuthScreen({ onLogin }: AuthScreenProps) {
 
           <button
             type="submit"
-            className="w-full bg-[#1A73E8] hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-3 transition-colors shadow-sm mt-4"
+            disabled={isLoading}
+            className="w-full bg-[#1A73E8] hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-3 transition-colors shadow-sm mt-4 disabled:opacity-70"
           >
-            Se connecter
+            {isLoading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              'Se connecter'
+            )}
           </button>
         </form>
       </motion.div>
