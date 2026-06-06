@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Mail, Lock, LogIn, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
+import { auth } from '../firebase';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 
 interface AuthScreenProps {
   onLogin: () => void;
@@ -24,16 +26,31 @@ export default function AuthScreen({ onLogin }: AuthScreenProps) {
     }
 
     setIsLoading(true);
-    
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    setIsLoading(false);
 
     if (email.trim() === 'mucobonus2@gmail.com' && password === 'bobo') {
-      toast.success('Connexion réussie');
-      onLogin();
+      try {
+        await signInWithEmailAndPassword(auth, email.trim(), password);
+        toast.success('Connexion réussie');
+        onLogin();
+      } catch (error: any) {
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+          try {
+            await createUserWithEmailAndPassword(auth, email.trim(), password);
+            toast.success('Compte créé et connexion réussie');
+            onLogin();
+          } catch (createError: any) {
+            console.error('Create error:', createError);
+            toast.error('Erreur lors de la création du compte', { description: createError.message });
+          }
+        } else {
+          console.error('Login error:', error);
+          toast.error('Erreur de connexion', { description: error.message });
+        }
+      } finally {
+        setIsLoading(false);
+      }
     } else {
+      setIsLoading(false);
       toast.error('Adresse e-mail ou mot de passe invalide', { 
         description: 'Veuillez demander au préfet de vous rappeler vos identifiants.' 
       });
@@ -51,7 +68,7 @@ export default function AuthScreen({ onLogin }: AuthScreenProps) {
           <LogIn className="w-10 h-10 transform translate-x-[-2px]" />
         </div>
         
-        <h1 className="text-2xl font-black text-gray-900 dark:text-white mb-2">CESCOM</h1>
+        <h1 className="text-2xl font-black text-gray-900 dark:text-white mb-2">CES2026</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">
           Veuillez vous connecter pour accéder à l'application.
         </p>

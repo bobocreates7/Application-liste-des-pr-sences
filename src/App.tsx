@@ -25,7 +25,8 @@ import AuthScreen from './components/AuthScreen';
 
 // Firebase imports
 import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch } from 'firebase/firestore';
-import { db } from './firebase';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { db, auth } from './firebase';
 
 export type TabType = 'home' | 'students' | 'reports' | 'notifications';
 
@@ -96,59 +97,35 @@ export default function App() {
       setRole(storedRole);
     }
     
-    const storedAuth = localStorage.getItem('app_authenticated');
-    if (storedAuth === 'true') {
-      setIsAuthenticated(true);
-    }
-    setAuthLoading(false);
+    // Automatically manage authentication state based on Firebase Auth
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+      }
+      setAuthLoading(false);
+    });
+
+    return () => unsubscribeAuth();
   }, []);
 
   // Sync data with Firebase
   useEffect(() => {
-    let syncedStudents = false;
-    let syncedAttendances = false;
-
     const unsubscribeStudents = onSnapshot(collection(db, 'students'), (snapshot) => {
       const studs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
-      if (!syncedStudents && studs.length === 0) {
-        // Migration from local storage
-        const localStuds = localStorage.getItem('app_students');
-        if (localStuds) {
-          const parsedStuds = JSON.parse(localStuds) as Student[];
-          if (parsedStuds.length > 0) {
-            const batch = writeBatch(db);
-            parsedStuds.forEach(s => batch.set(doc(db, 'students', s.id), s));
-            batch.commit();
-          }
-        }
-      }
-      syncedStudents = true;
       setStudents(studs);
     }, (error) => {
       console.error("Students sync error", error);
+      toast.error("Erreur de synchronisation des élèves avec le serveur.");
     });
 
     const unsubscribeAttendances = onSnapshot(collection(db, 'attendances'), (snapshot) => {
       const atts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DailyAttendance));
-      if (!syncedAttendances && atts.length === 0) {
-        // Migration from local storage
-        const localAtts = localStorage.getItem('app_attendances');
-        if (localAtts) {
-          const parsedAtts = JSON.parse(localAtts) as DailyAttendance[];
-          if (parsedAtts.length > 0) {
-             const batch = writeBatch(db);
-             parsedAtts.forEach(a => {
-               const id = a.id || `${a.classId}_${a.date}`;
-               batch.set(doc(db, 'attendances', id), { ...a, id });
-             });
-             batch.commit();
-          }
-        }
-      }
-      syncedAttendances = true;
       setAttendances(atts);
     }, (error) => {
       console.error("Attendances sync error", error);
+      toast.error("Erreur de synchronisation des présences avec le serveur.");
     });
 
     return () => {
@@ -374,7 +351,12 @@ export default function App() {
     setActiveTab('home');
   };
 
-  const handleAppLogout = () => {
+  const handleAppLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (e) {
+      console.error('Logout error', e);
+    }
     setIsAuthenticated(false);
     localStorage.removeItem('app_authenticated');
     setRole(null);
