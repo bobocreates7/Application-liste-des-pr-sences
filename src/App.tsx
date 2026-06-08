@@ -52,6 +52,7 @@ export default function App() {
   
   const [role, setRole] = useState<UserRole | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [schoolUid, setSchoolUid] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
   // Initialize StatusBar and BackButton
@@ -101,8 +102,12 @@ export default function App() {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
         setIsAuthenticated(true);
+        setSchoolUid(user.uid);
+        localStorage.setItem('app_authenticated', 'true');
       } else {
         setIsAuthenticated(false);
+        setSchoolUid(null);
+        localStorage.removeItem('app_authenticated');
       }
       setAuthLoading(false);
     });
@@ -112,27 +117,59 @@ export default function App() {
 
   // Sync data with Firebase
   useEffect(() => {
-    const unsubscribeStudents = onSnapshot(collection(db, 'students'), (snapshot) => {
+    if (!schoolUid) return;
+
+    let syncedStudents = false;
+    let syncedAttendances = false;
+
+    const unsubscribeStudents = onSnapshot(collection(db, 'schools', schoolUid, 'students'), (snapshot) => {
       const studs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
+      if (!syncedStudents && studs.length === 0) {
+        // Migration from local storage
+        const localStuds = localStorage.getItem('app_students');
+        if (localStuds) {
+          const parsedStuds = JSON.parse(localStuds) as Student[];
+          if (parsedStuds.length > 0) {
+            const batch = writeBatch(db);
+            parsedStuds.forEach(s => batch.set(doc(db, 'schools', schoolUid, 'students', s.id), s));
+            batch.commit();
+          }
+        }
+      }
+      syncedStudents = true;
       setStudents(studs);
     }, (error) => {
       console.error("Students sync error", error);
-      toast.error("Erreur de synchronisation des élèves avec le serveur.");
     });
 
-    const unsubscribeAttendances = onSnapshot(collection(db, 'attendances'), (snapshot) => {
+    const unsubscribeAttendances = onSnapshot(collection(db, 'schools', schoolUid, 'attendances'), (snapshot) => {
       const atts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DailyAttendance));
+      if (!syncedAttendances && atts.length === 0) {
+        // Migration from local storage
+        const localAtts = localStorage.getItem('app_attendances');
+        if (localAtts) {
+          const parsedAtts = JSON.parse(localAtts) as DailyAttendance[];
+          if (parsedAtts.length > 0) {
+             const batch = writeBatch(db);
+             parsedAtts.forEach(a => {
+               const id = a.id || `${a.classId}_${a.date}`;
+               batch.set(doc(db, 'schools', schoolUid, 'attendances', id), { ...a, id });
+             });
+             batch.commit();
+          }
+        }
+      }
+      syncedAttendances = true;
       setAttendances(atts);
     }, (error) => {
       console.error("Attendances sync error", error);
-      toast.error("Erreur de synchronisation des présences avec le serveur.");
     });
 
     return () => {
       unsubscribeStudents();
       unsubscribeAttendances();
     };
-  }, []);
+  }, [schoolUid]);
 
   // Schedule notifications for overdue tasks
   useEffect(() => {
@@ -217,7 +254,8 @@ export default function App() {
       return [...prev, newAttendance];
     });
 
-    setDoc(doc(db, 'attendances', attendanceId), newAttendance).catch(e => {
+    if (!schoolUid) return;
+    setDoc(doc(db, 'schools', schoolUid, 'attendances', attendanceId), newAttendance).catch(e => {
       console.error(e);
       toast.error('Erreur de synchronisation en arrière-plan');
     });
@@ -253,7 +291,8 @@ export default function App() {
       return [...prev, newAttendance];
     });
 
-    setDoc(doc(db, 'attendances', attendanceId), newAttendance).catch(error => {
+    if (!schoolUid) return;
+    setDoc(doc(db, 'schools', schoolUid, 'attendances', attendanceId), newAttendance).catch(error => {
       console.error('Erreur validation:', error);
       toast.error('Erreur lors de la validation', { description: String(error) });
     });
@@ -273,10 +312,11 @@ export default function App() {
   };
 
   const handleAddStudents = async (newStudents: Student[]) => {
+    if (!schoolUid) return;
     try {
       const batch = writeBatch(db);
       newStudents.forEach(student => {
-        const studentRef = doc(db, 'students', student.id);
+        const studentRef = doc(db, 'schools', schoolUid, 'students', student.id);
         batch.set(studentRef, student);
       });
       await batch.commit();
@@ -288,8 +328,9 @@ export default function App() {
   };
 
   const handleDeleteStudent = async (studentId: string) => {
+    if (!schoolUid) return;
     try {
-      await deleteDoc(doc(db, 'students', studentId));
+      await deleteDoc(doc(db, 'schools', schoolUid, 'students', studentId));
       toast.success('Élève supprimé');
     } catch (e) {
       console.error(e);
