@@ -1,4 +1,4 @@
-package com.cescom.lp;
+package com.cescom.lp.dev;
 
 import com.getcapacitor.BridgeActivity;
 

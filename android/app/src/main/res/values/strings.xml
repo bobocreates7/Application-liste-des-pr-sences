@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">CESCOM LP</string>
-    <string name="title_activity_main">CESCOM LP</string>
-    <string name="package_name">com.cescom.lp</string>
-    <string name="custom_url_scheme">com.cescom.lp</string>
+    <string name="app_name">CESCOM LP TEST</string>
+    <string name="title_activity_main">CESCOM LP TEST</string>
+    <string name="package_name">com.cescom.lp.dev</string>
+    <string name="custom_url_scheme">com.cescom.lp.dev</string>
 </resources>

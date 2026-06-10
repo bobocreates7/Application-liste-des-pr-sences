@@ -1,8 +1,8 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.cescom.lp',
-  appName: 'CESCOM LP',
+  appId: 'com.cescom.lp.dev',
+  appName: 'CESCOM LP TEST',
   webDir: 'dist',
   plugins: {
     LocalNotifications: {
