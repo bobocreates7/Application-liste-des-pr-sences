@@ -72,9 +72,9 @@ export default function Dashboard({
   return (
     <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 flex-1 relative">
       {/* Header */}
-      <header className="bg-[#1A73E8] text-white p-4 shadow-md z-10 sticky top-0">
+      <header className="bg-[#800000] text-white p-4 shadow-md z-10 sticky top-0">
         <div className="flex justify-between items-center mb-3">
-          <h1 className="text-xl font-bold tracking-tight">CESCOM LP</h1>
+          <h1 className="text-xl font-bold tracking-tight">CESCOM LP DIGITALE</h1>
           <button onClick={onOpenMenu} className="p-1 -mr-1 hover:bg-white/20 rounded-full transition-colors active:bg-white/30">
             <Menu className="w-6 h-6 text-white" />
           </button>
