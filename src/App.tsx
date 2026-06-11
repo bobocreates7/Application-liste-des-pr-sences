@@ -59,7 +59,7 @@ export default function App() {
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
       StatusBar.setStyle({ style: Style.Dark });
-      StatusBar.setBackgroundColor({ color: '#1A73E8' });
+      StatusBar.setBackgroundColor({ color: '#800000' });
       StatusBar.setOverlaysWebView({ overlay: false });
 
       // Ensure splash screen stays for at least 3 seconds
