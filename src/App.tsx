@@ -111,7 +111,7 @@ export default function App() {
       }
       setAuthLoading(false);
     });
-
+setTimeout(() => setAuthLoading(false), 10000);
     return () => unsubscribeAuth();
   }, []);
 
