@@ -48,6 +48,10 @@ export const NotificationService = {
         scheduleDate.setDate(scheduleDate.getDate() + i);
         scheduleDate.setHours(10, 0, 0, 0);
 
+        // Skip weekends
+        const day = scheduleDate.getDay();
+        if (day === 0 || day === 6) continue;
+
         // If it's today
         if (i === 0) {
           // Skip if all tasks are done today
