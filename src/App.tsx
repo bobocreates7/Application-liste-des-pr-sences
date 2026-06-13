@@ -71,7 +71,7 @@ export default function App() {
     () => (localStorage.getItem("app_active_tab") as TabType) || "home"
   );
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem("app_dark_mode") === "true");
   const [filter, setFilter] = useState<"all" | "todo" | "done">("all");
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -241,6 +241,7 @@ export default function App() {
   }, [activeTab]);
 
   useEffect(() => {
+    localStorage.setItem("app_dark_mode", String(isDarkMode));
     if (isDarkMode) {
       document.documentElement.classList.add("dark");
       document.body.style.backgroundColor = "#111827"; // gray-900
@@ -249,6 +250,45 @@ export default function App() {
       document.body.style.backgroundColor = "#f3f4f6"; // gray-100
     }
   }, [isDarkMode]);
+
+  // Swipe to open/close menu
+  useEffect(() => {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    const swipeThreshold = 40; // pixels
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      const touchEndX = e.changedTouches[0].screenX;
+      const touchEndY = e.changedTouches[0].screenY;
+      
+      const xDiff = touchStartX - touchEndX;
+      const yDiff = touchStartY - touchEndY;
+
+      // Ensure gesture is predominantly horizontal
+      if (Math.abs(xDiff) > Math.abs(yDiff) * 1.5 && Math.abs(xDiff) > swipeThreshold) {
+        if (xDiff > 0) {
+          // Swipe Right to Left
+          setIsMenuOpen(true);
+        } else {
+          // Swipe Left to Right
+          setIsMenuOpen(false);
+        }
+      }
+    };
+
+    window.addEventListener('touchstart', handleTouchStart);
+    window.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, []);
 
   const handleSelectClass = (classId: string) => {
     setSelectedClassId(classId);
@@ -396,6 +436,7 @@ export default function App() {
     const absentCount = newAttendance.absents.length || 0;
 
     toast.success("Appel validé et synchronisé !", {
+      id: "attendance-toast",
       description: `${absentCount} absent(s) signalé(s).`,
       style: {
         background: "#43A047",
@@ -744,7 +785,7 @@ export default function App() {
         </AnimatePresence>
       </div>
 
-      <Toaster position="top-center" theme={isDarkMode ? "dark" : "light"} />
+      <Toaster position="top-center" theme={isDarkMode ? "dark" : "light"} visibleToasts={1} />
     </div>
   );
 }
