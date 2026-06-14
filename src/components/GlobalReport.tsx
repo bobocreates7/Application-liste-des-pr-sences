@@ -53,6 +53,17 @@ export default function GlobalReport({
   // Calculate total absents
   const totalAbsents = absentDetails.length;
 
+  const getStudentOrder = (student: Student) => {
+    const classStudents = students
+      .filter(s => s.classId === student.classId)
+      .sort((a, b) => {
+        const lastNameCompare = a.lastName.localeCompare(b.lastName);
+        if (lastNameCompare !== 0) return lastNameCompare;
+        return a.firstName.localeCompare(b.firstName);
+      });
+    return classStudents.findIndex(s => s.id === student.id) + 1;
+  };
+
   // Sort by class name, then student last name, then first name
   absentDetails.sort((a, b) => {
     if (a.className !== b.className)
@@ -181,7 +192,7 @@ export default function GlobalReport({
 
       // Table Data
       const tableData = absentDetails.map((detail) => [
-        `${detail.student!.lastName.toUpperCase()} ${
+        `${getStudentOrder(detail.student!)}. ${detail.student!.lastName.toUpperCase()} ${
           detail.student!.firstName
         }`,
         detail.className,
@@ -290,7 +301,7 @@ export default function GlobalReport({
       ];
 
       const bodyData = targetStudents.map((student) => {
-        const row = [`${student.lastName.toUpperCase()} ${student.firstName}`];
+        const row = [`${getStudentOrder(student)}. ${student.lastName.toUpperCase()} ${student.firstName}`];
         weekdayDateStrings.forEach((dateStr) => {
           // Check if there is an attendance record for this class on this date
           const attRecord = attendances.find(
@@ -469,6 +480,7 @@ export default function GlobalReport({
                     <div key={idx} className="p-3 flex flex-col gap-1">
                       <div className="flex justify-between items-start">
                         <p className="font-bold text-gray-900 dark:text-white text-sm uppercase">
+                          <span className="text-gray-500 mr-1 font-medium">{getStudentOrder(detail.student!)}.</span>
                           {detail.student!.lastName}{" "}
                           <span className="capitalize font-medium text-gray-700 dark:text-gray-300">
                             {detail.student!.firstName}

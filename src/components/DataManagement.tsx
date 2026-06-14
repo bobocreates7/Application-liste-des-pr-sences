@@ -213,10 +213,10 @@ export default function DataManagement({ classes, students, onAddStudents, onDel
                   {role === 'prefet' && <span className="text-[10px] mt-1 block">Utilisez le formulaire pour en ajouter.</span>}
                 </div>
               ) : (
-                classStudents.map(student => (
+                classStudents.map((student, index) => (
                   <div key={student.id} className="flex items-center justify-between bg-white dark:bg-gray-800 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm">
                     <span className="font-medium text-gray-900 dark:text-white text-sm">
-                      {student.lastName} <span className="text-gray-600 dark:text-gray-400 font-normal">{student.firstName}</span>
+                      <span className="text-gray-500 mr-1">{index + 1}.</span>{student.lastName.toUpperCase()} <span className="text-gray-600 dark:text-gray-400 font-normal">{student.firstName}</span>
                     </span>
                     {role === 'prefet' && (
                       <button 
