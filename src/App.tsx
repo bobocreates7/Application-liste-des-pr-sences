@@ -71,24 +71,14 @@ export default function App() {
     () => (localStorage.getItem("app_active_tab") as TabType) || "home"
   );
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(
-    () => localStorage.getItem("app_dark_mode") === "true"
-  );
+  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem("app_dark_mode") === "true");
   const [filter, setFilter] = useState<"all" | "todo" | "done">("all");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const [role, setRole] = useState<UserRole | null>(
-    () => localStorage.getItem("app_portal_role") as UserRole | null
-  );
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    () => localStorage.getItem("app_authenticated") === "true"
-  );
-  const [schoolUid, setSchoolUid] = useState<string | null>(
-    () => localStorage.getItem("app_school_uid") || null
-  );
-  const [authLoading, setAuthLoading] = useState(
-    () => localStorage.getItem("app_authenticated") !== "true"
-  );
+  const [role, setRole] = useState<UserRole | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [schoolUid, setSchoolUid] = useState<string | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   // Initialize StatusBar and BackButton
   useEffect(() => {
@@ -97,8 +87,10 @@ export default function App() {
       StatusBar.setBackgroundColor({ color: "#1A73E8" });
       StatusBar.setOverlaysWebView({ overlay: false });
 
-      // Hide splash screen immediately to prevent freeze feeling
-      SplashScreen.hide();
+      // Ensure splash screen stays for at least 3 seconds
+      setTimeout(() => {
+        SplashScreen.hide();
+      }, 3000);
 
       CapacitorApp.addListener("backButton", () => {
         if (isMenuOpen) {
@@ -126,18 +118,23 @@ export default function App() {
 
   // Load portal role
   useEffect(() => {
+    const storedRole = localStorage.getItem(
+      "app_portal_role"
+    ) as UserRole | null;
+    if (storedRole) {
+      setRole(storedRole);
+    }
+
     // Automatically manage authentication state based on Firebase Auth
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
         setIsAuthenticated(true);
         setSchoolUid(user.uid);
         localStorage.setItem("app_authenticated", "true");
-        localStorage.setItem("app_school_uid", user.uid);
       } else {
         setIsAuthenticated(false);
         setSchoolUid(null);
         localStorage.removeItem("app_authenticated");
-        localStorage.removeItem("app_school_uid");
       }
       setAuthLoading(false);
     });
@@ -268,15 +265,12 @@ export default function App() {
     const handleTouchEnd = (e: TouchEvent) => {
       const touchEndX = e.changedTouches[0].screenX;
       const touchEndY = e.changedTouches[0].screenY;
-
+      
       const xDiff = touchStartX - touchEndX;
       const yDiff = touchStartY - touchEndY;
 
       // Ensure gesture is predominantly horizontal
-      if (
-        Math.abs(xDiff) > Math.abs(yDiff) * 1.5 &&
-        Math.abs(xDiff) > swipeThreshold
-      ) {
+      if (Math.abs(xDiff) > Math.abs(yDiff) * 1.5 && Math.abs(xDiff) > swipeThreshold) {
         if (xDiff > 0) {
           // Swipe Right to Left
           setIsMenuOpen(true);
@@ -287,12 +281,12 @@ export default function App() {
       }
     };
 
-    window.addEventListener("touchstart", handleTouchStart);
-    window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener('touchstart', handleTouchStart);
+    window.addEventListener('touchend', handleTouchEnd);
 
     return () => {
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
     };
   }, []);
 
@@ -555,7 +549,6 @@ export default function App() {
     }
     setIsAuthenticated(false);
     localStorage.removeItem("app_authenticated");
-    localStorage.removeItem("app_school_uid");
     setRole(null);
     localStorage.removeItem("app_portal_role");
     localStorage.removeItem("app_active_tab");
@@ -566,21 +559,8 @@ export default function App() {
 
   if (authLoading) {
     return (
-      <div className="fixed inset-0 bg-[#1A73E8] flex flex-col items-center justify-center z-[99999]">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 512 512"
-          className="w-[120px] h-[120px] animate-pulse"
-        >
-          <path
-            d="M336 176h-16v-16c0-17.6-14.4-32-32-32h-64c-17.6 0-32 14.4-32 32v16h-16c-26.5 0-48 21.5-48 48v192c0 26.5 21.5 48 48 48h160c26.5 0 48-21.5 48-48V224c0-26.5-21.5-48-48-48zm-112-16h64v32h-64v-32zm128 256c0 8.8-7.2 16-16 16H176c-8.8 0-16-7.2-16-16V224c0-8.8 7.2-16 16-16h16v32c0 17.6 14.4 32 32 32h64c17.6 0 32-14.4 32-32v-32h16c8.8 0 16 7.2 16 16v192z"
-            fill="white"
-          />
-          <path
-            d="M224 336l-32-32-22.6 22.6 54.6 54.6 96-96L297.4 262.6z"
-            fill="white"
-          />
-        </svg>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-4 border-[#1A73E8] border-t-transparent animate-spin"></div>
       </div>
     );
   }
@@ -805,11 +785,7 @@ export default function App() {
         </AnimatePresence>
       </div>
 
-      <Toaster
-        position="top-center"
-        theme={isDarkMode ? "dark" : "light"}
-        visibleToasts={1}
-      />
+      <Toaster position="top-center" theme={isDarkMode ? "dark" : "light"} visibleToasts={1} />
     </div>
   );
 }
