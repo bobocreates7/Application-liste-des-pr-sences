@@ -1,0 +1,21 @@
+{
+  "name": "CESCOM LP - Appel",
+  "short_name": "CESCOM",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1A73E8",
+  "theme_color": "#1A73E8",
+  "description": "Application de gestion des présences",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ]
+}
