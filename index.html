@@ -7,43 +7,10 @@
     <meta name="description" content="Application de gestion des absences pour les préfets." />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="apple-touch-icon" href="/icon.svg" />
-    <link rel="manifest" href="/manifest.json" />
     <title>CESCOM LP</title>
   </head>
   <body>
-    <div id="root">
-      <style>
-        /* Splash Screen minimaliste CSS */
-        body { margin: 0; background-color: #f3f4f6; }
-        .dark body { background-color: #111827; }
-        .splash-container {
-          position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-          display: flex; flex-direction: column; align-items: center; justify-content: center;
-          background-color: #1A73E8; color: white;
-          font-family: system-ui, -apple-system, sans-serif;
-          z-index: 9999;
-        }
-        .splash-icon {
-          width: 120px; height: 120px; margin-bottom: 24px;
-          animation: splash-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        .splash-title {
-          font-size: 36px; font-weight: 800; letter-spacing: -0.02em; margin: 0;
-        }
-        .splash-subtitle {
-          font-size: 15px; opacity: 0.9; margin-top: 8px; font-weight: 500;
-        }
-        @keyframes splash-pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.8; transform: scale(1.05); }
-        }
-      </style>
-      <div class="splash-container">
-        <img src="/icon.svg" alt="Logo" class="splash-icon" />
-        <h1 class="splash-title">CESCOM LP</h1>
-        <p class="splash-subtitle">Chargement de l'application...</p>
-      </div>
-    </div>
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
