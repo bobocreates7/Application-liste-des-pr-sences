@@ -16,7 +16,7 @@ android {
     }
     signingConfigs {
         release {
-            storeFile file('cescomcs_keystore.p12')
+            storeFile file('keystore.p12')
             storePassword 'cescomngagara'
             keyAlias 'key0'
             keyPassword 'cescomngagara'
