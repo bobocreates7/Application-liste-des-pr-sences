@@ -27,23 +27,18 @@ export default function SideMenu({
   const startX = useRef(0);
   const currentX = useRef(0);
   const dragging = useRef(false);
-  const animating = useRef(false);
 
   const WIDTH = 320;
 
-  // INIT / OPEN-CLOSE (ONLY SOURCE OF TRUTH)
+  // sync open/close state
   useEffect(() => {
     const el = menuRef.current;
     if (!el) return;
 
-    el.style.transition = 'none';
-
     if (isOpen) {
       el.style.transform = 'translateX(0px)';
-      currentX.current = 0;
     } else {
       el.style.transform = `translateX(${WIDTH}px)`;
-      currentX.current = WIDTH;
     }
   }, [isOpen]);
 
@@ -53,10 +48,9 @@ export default function SideMenu({
     startX.current = e.touches[0].clientX;
   };
 
-  // TOUCH MOVE (WHATSAPP STYLE)
+  // TOUCH MOVE (WHATSAPP STYLE REAL TIME)
   const onTouchMove = (e: React.TouchEvent) => {
     if (!dragging.current) return;
-    if (animating.current) return;
 
     const el = menuRef.current;
     if (!el) return;
@@ -64,13 +58,14 @@ export default function SideMenu({
     const delta = e.touches[0].clientX - startX.current;
 
     let x = delta;
+
     if (x < 0) x = 0;
     if (x > WIDTH) x = WIDTH;
 
     currentX.current = x;
 
-    el.style.transition = 'none';
     el.style.transform = `translateX(${x}px)`;
+    el.style.transition = 'none'; // IMPORTANT: no lag
   };
 
   // TOUCH END
@@ -79,22 +74,18 @@ export default function SideMenu({
     if (!el) return;
 
     dragging.current = false;
-    animating.current = true;
 
     const x = currentX.current;
 
-    const target = x > WIDTH * 0.4 ? WIDTH : 0;
-
-    el.style.transition = 'transform 200ms ease-out';
-    el.style.transform = `translateX(${target}px)`;
-
-    setTimeout(() => {
-      animating.current = false;
-
-      if (target === WIDTH) {
-        onClose();
-      }
-    }, 200);
+    // threshold close/open
+    if (x > WIDTH * 0.4) {
+      el.style.transition = 'transform 180ms ease-out';
+      el.style.transform = `translateX(${WIDTH}px)`;
+      onClose();
+    } else {
+      el.style.transition = 'transform 180ms ease-out';
+      el.style.transform = 'translateX(0px)';
+    }
   };
 
   return (
@@ -115,6 +106,9 @@ export default function SideMenu({
         onTouchEnd={onTouchEnd}
         onTouchCancel={onTouchEnd}
         className="fixed top-0 right-0 bottom-0 w-[80%] max-w-sm bg-[#F8F9FA] dark:bg-gray-900 shadow-2xl z-50 flex flex-col will-change-transform"
+        style={{
+          transform: `translateX(${isOpen ? 0 : WIDTH}px)`
+        }}
       >
 
         {/* HEADER */}
@@ -125,7 +119,7 @@ export default function SideMenu({
           </button>
         </div>
 
-        {/* CONTENT */}
+        {/* CONTENT (UNCHANGED UI EXACT COPY) */}
         <div className="flex-1 p-4 flex flex-col gap-6 overflow-y-auto">
 
           {/* SESSION */}

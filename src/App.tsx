@@ -79,16 +79,6 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [schoolUid, setSchoolUid] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-    const [authTimeout, setAuthTimeout] = useState(false);
-    
-    // Timeout 3s max pour le spinner même sans internet
-useEffect(() => {
-  const timer = setTimeout(() => {
-    setAuthTimeout(true);
-    setAuthLoading(false);
-  }, 3000);
-  return () => clearTimeout(timer);
-}, []);
 
   // Initialize StatusBar and BackButton
   useEffect(() => {
@@ -146,8 +136,7 @@ useEffect(() => {
         setSchoolUid(null);
         localStorage.removeItem("app_authenticated");
       }
-     if (!authTimeout){    setAuthLoading(false);
-     }
+      setAuthLoading(false);
     });
 
     return () => unsubscribeAuth();
