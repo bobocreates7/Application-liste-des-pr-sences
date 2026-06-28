@@ -2,6 +2,8 @@ import React, { useState, useMemo, useRef, useLayoutEffect } from 'react';
 import { Search, MapPin, CheckCircle2, Circle, Calendar as CalendarIcon, Menu, X, Folder } from 'lucide-react';
 import { Class, DailyAttendance, Student } from '../types';
 import { UserRole } from './PortalSelect';
+import { Select } from './Select';
+import { Trimester, TRIMESTER_OPTIONS } from '../utils/trimester';
 
 let dashboardScrollPos = 0;
 
@@ -11,6 +13,8 @@ interface DashboardProps {
   attendances: DailyAttendance[];
   currentDate: string;
   onDateChange: (date: string) => void;
+  activeTrimester: Trimester;
+  onTrimesterChange: (t: Trimester) => void;
   onSelectClass: (id: string) => void;
   onOpenMenu: () => void;
   filter: 'all' | 'todo' | 'done';
@@ -26,6 +30,8 @@ export default function Dashboard({
   attendances, 
   currentDate, 
   onDateChange, 
+  activeTrimester,
+  onTrimesterChange,
   onSelectClass,
   onOpenMenu,
   filter,
@@ -74,21 +80,35 @@ export default function Dashboard({
       {/* Header */}
       <header className="bg-[#1A73E8] text-white p-4 shadow-md z-10 sticky top-0">
         <div className="flex justify-between items-center mb-3">
-          <h1 className="text-xl font-bold tracking-tight">CESCOM POINTER</h1>
+          <h1 className="text-xl font-bold tracking-tight">CESCOM LP</h1>
           <button onClick={onOpenMenu} className="p-1 -mr-1 hover:bg-white/20 rounded-full transition-colors active:bg-white/30">
             <Menu className="w-6 h-6 text-white" />
           </button>
         </div>
         
-        {/* Date Selector */}
-        <div className="flex items-center bg-white/10 rounded-xl p-0.5 mb-3">
-          <CalendarIcon className="w-4 h-4 ml-3 mr-2 text-white/80" />
-          <input 
-            type="date" 
-            value={currentDate}
-            onChange={(e) => onDateChange(e.target.value)}
-            className="bg-transparent border-none text-white focus:ring-0 font-medium w-full py-1.5 text-sm cursor-pointer [color-scheme:dark]"
-          />
+        <div className="flex gap-2 mb-4">
+          {/* Date Selector */}
+          <div className="flex-1 flex items-center justify-center bg-black/20 hover:bg-black/25 transition-colors rounded-2xl px-3 py-3 relative">
+            <CalendarIcon className="w-5 h-5 text-white mr-2 shrink-0" />
+            <span className="text-white font-medium text-sm">
+              {new Date(currentDate).toLocaleDateString('fr-FR')}
+            </span>
+            <input 
+              type="date" 
+              value={currentDate}
+              onChange={(e) => onDateChange(e.target.value)}
+              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full [color-scheme:dark]"
+            />
+          </div>
+          {/* Trimester Selector */}
+          <div className="flex-[1.2]">
+            <Select 
+              options={TRIMESTER_OPTIONS} 
+              value={activeTrimester} 
+              onChange={(val) => onTrimesterChange(val as Trimester)}
+              buttonClassName="bg-black/20 hover:bg-black/25 text-white border-none py-3 shadow-none justify-center gap-2 font-medium rounded-2xl h-full"
+            />
+          </div>
         </div>
 
         {/* Search Bar */}

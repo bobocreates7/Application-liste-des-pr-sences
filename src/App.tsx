@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Toaster, toast } from "sonner";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { Capacitor } from "@capacitor/core";
@@ -22,6 +22,7 @@ import SideMenu from "./components/SideMenu";
 import { NotificationService } from "./services/notificationService";
 import PortalSelect, { UserRole } from "./components/PortalSelect";
 import AuthScreen from "./components/AuthScreen";
+import { Trimester, getTrimesterFromDate } from './utils/trimester';
 
 // Firebase imports
 import {
@@ -64,6 +65,7 @@ export default function App() {
   const [currentDate, setCurrentDate] = useState<string>(() =>
     getValidSchoolDate()
   );
+  const [activeTrimester, setActiveTrimester] = useState<Trimester>(() => getTrimesterFromDate(getValidSchoolDate()));
   const [selectedClassId, setSelectedClassId] = useState<string | null>(() =>
     localStorage.getItem("app_selected_class")
   );
@@ -78,7 +80,12 @@ export default function App() {
   const [role, setRole] = useState<UserRole | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [schoolUid, setSchoolUid] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+
+  const filteredAttendances = useMemo(() => {
+    return attendances.filter(a => getTrimesterFromDate(a.date) === activeTrimester);
+  }, [attendances, activeTrimester]);
 
   // Initialize StatusBar and BackButton
   useEffect(() => {
@@ -130,10 +137,12 @@ export default function App() {
       if (user) {
         setIsAuthenticated(true);
         setSchoolUid(user.uid);
+        setUserEmail(user.email);
         localStorage.setItem("app_authenticated", "true");
       } else {
         setIsAuthenticated(false);
         setSchoolUid(null);
+        setUserEmail(null);
         localStorage.removeItem("app_authenticated");
       }
       setAuthLoading(false);
@@ -273,7 +282,9 @@ export default function App() {
       if (Math.abs(xDiff) > Math.abs(yDiff) * 1.5 && Math.abs(xDiff) > swipeThreshold) {
         if (xDiff > 0) {
           // Swipe Right to Left
-          setIsMenuOpen(true);
+          if (activeTab === 'home') {
+            setIsMenuOpen(true);
+          }
         } else {
           // Swipe Left to Right
           setIsMenuOpen(false);
@@ -288,7 +299,7 @@ export default function App() {
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchend', handleTouchEnd);
     };
-  }, []);
+  }, [activeTab]);
 
   const handleSelectClass = (classId: string) => {
     setSelectedClassId(classId);
@@ -592,6 +603,7 @@ export default function App() {
         isDarkMode={isDarkMode}
         toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
         role={role}
+        userEmail={userEmail}
         onLogout={handleLogout}
         onAppLogout={handleAppLogout}
       />
@@ -611,7 +623,7 @@ export default function App() {
                 classData={classes.find((c) => c.id === selectedClassId)!}
                 students={students.filter((s) => s.classId === selectedClassId)}
                 absents={currentAttendance.absents}
-                attendances={attendances}
+                attendances={filteredAttendances}
                 onBack={handleBackToDashboard}
                 onUpdateStatus={handleUpdateStudentStatus}
                 onValidate={handleValidateClass}
@@ -632,16 +644,18 @@ export default function App() {
                   <Dashboard
                     classes={classes}
                     students={students}
-                    attendances={attendances}
+                    attendances={filteredAttendances}
                     currentDate={currentDate}
                     onDateChange={handleDateChange}
+                    activeTrimester={activeTrimester}
+                    onTrimesterChange={setActiveTrimester}
                     onSelectClass={handleSelectClass}
                     onOpenMenu={() => setIsMenuOpen(true)}
                     filter={filter}
                     setFilter={setFilter}
                     searchTerm={searchTerm}
                     setSearchTerm={setSearchTerm}
-                    role={role}
+                    role={role!}
                   />
                 )}
                 {activeTab === "students" && (
@@ -656,15 +670,16 @@ export default function App() {
                 {activeTab === "reports" && (
                   <GlobalReport
                     currentDate={currentDate}
-                    attendances={attendances}
+                    attendances={filteredAttendances}
                     classes={classes}
                     students={students}
+                    activeTrimester={activeTrimester}
                   />
                 )}
                 {activeTab === "notifications" && (
                   <Notifications
                     classes={classes}
-                    attendances={attendances}
+                    attendances={filteredAttendances}
                     onDateChange={handleDateChange}
                     onClose={() => setActiveTab("home")}
                   />

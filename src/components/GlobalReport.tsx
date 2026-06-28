@@ -7,12 +7,16 @@ import autoTable from "jspdf-autotable";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
 import { Capacitor } from "@capacitor/core";
+import { Select } from './Select';
+
+import { Trimester, getTrimesterLabel } from "../utils/trimester";
 
 interface GlobalReportProps {
   currentDate: string;
   attendances: DailyAttendance[];
   classes: Class[];
   students: Student[];
+  activeTrimester: Trimester;
 }
 
 export default function GlobalReport({
@@ -20,6 +24,7 @@ export default function GlobalReport({
   attendances,
   classes,
   students,
+  activeTrimester,
 }: GlobalReportProps) {
   const [selectedClassFilter, setSelectedClassFilter] = useState<string>("all");
   const [reportType, setReportType] = useState<"day" | "month">("day");
@@ -183,7 +188,7 @@ export default function GlobalReport({
         selectedClassFilter === "all"
           ? "Toutes les classes"
           : classes.find((c) => c.id === selectedClassFilter)?.name || "";
-      doc.text(`Classe : ${classFilterName}`, 14, 36);
+      doc.text(`Classe : ${classFilterName} | ${getTrimesterLabel(activeTrimester)}`, 14, 36);
 
       // Total
       doc.setFontSize(14);
@@ -277,6 +282,10 @@ export default function GlobalReport({
       const textWidth = doc.getTextWidth("LISTE DES PRESENCES");
       doc.setLineWidth(0.5);
       doc.line(148.5 - textWidth / 2, 46, 148.5 + textWidth / 2, 46); // Underline
+
+      doc.setFontSize(12);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Trimestre : ${getTrimesterLabel(activeTrimester)}`, 148.5, 53, { align: "center" });
 
       doc.setFontSize(14);
       doc.text(`MOIS DE: ${monthName}`, 14, 60);
@@ -415,23 +424,15 @@ export default function GlobalReport({
         {/* Class Filter */}
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Filter className="h-4 w-4 text-white/70" />
-            </div>
-            <select
+            <Select
               value={selectedClassFilter}
-              onChange={(e) => setSelectedClassFilter(e.target.value)}
-              className="block w-full pl-9 pr-3 py-2 border-none rounded-xl bg-white/10 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 shadow-sm text-sm appearance-none cursor-pointer"
-            >
-              <option value="all" className="text-gray-900">
-                Toutes les classes
-              </option>
-              {classes.map((c) => (
-                <option key={c.id} value={c.id} className="text-gray-900">
-                  {c.name}
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedClassFilter}
+              options={[
+                { value: "all", label: "Toutes les classes" },
+                ...classes.map(c => ({ value: c.id, label: c.name }))
+              ]}
+              className="!bg-white/10 !border-none !text-white text-sm"
+            />
           </div>
 
           {reportType === "month" && (

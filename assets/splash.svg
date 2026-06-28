@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <rect width="1024" height="1024" fill="#ffffff" />
+  
+  <g transform="translate(512, 450)">
+    <!-- Outer circle -->
+    <circle cx="0" cy="0" r="220" fill="none" stroke="#ff0000" stroke-width="4" />
+    <circle cx="0" cy="0" r="160" fill="none" stroke="#ff0000" stroke-width="4" />
+    
+    <!-- Text along path -->
+    <path id="text-path-top" d="M -180,0 A 180,180 0 1,1 180,0" fill="none" />
+    <text fill="#ff0000" font-family="Arial, sans-serif" font-weight="bold" font-size="32" letter-spacing="4">
+      <textPath href="#text-path-top" startOffset="50%" text-anchor="middle">CENTRE SCOLAIRE MULTIDISCIPLINAIRE</textPath>
+    </text>
+    
+    <!-- CESCOM text at bottom -->
+    <path d="M -90, 160 L -120, 220 L 120, 220 L 90, 160 Z" fill="none" stroke="#ff0000" stroke-width="4" />
+    <text x="0" y="200" fill="#ff0000" font-family="Arial, sans-serif" font-weight="bold" font-size="38" text-anchor="middle">CESCOM</text>
+    
+    <!-- Inner drawing: Building/Book/Arrows -->
+    <g transform="translate(0, -20)" stroke="#ff0000" stroke-width="3" fill="none">
+      <!-- Arrows -->
+      <path d="M 0,0 L 0,-80 M 0,-80 L -15,-65 M 0,-80 L 15,-65" />
+      <path d="M 0,-40 L -80,-40 L -80,0 M -80,0 L -90,-15 M -80,0 L -70,-15" />
+      <path d="M 0,-40 L 80,-40 L 80,0 M 80,0 L 70,-15 M 80,0 L 90,-15" />
+      
+      <!-- Building Left -->
+      <rect x="-110" y="0" width="60" height="60" fill="#ffffff" />
+      <path d="M-110,10 h60 M-110,20 h60 M-110,30 h60 M-110,40 h60 M-110,50 h60" stroke-width="1" />
+      <path d="M-100,0 v60 M-90,0 v60 M-80,0 v60 M-70,0 v60 M-60,0 v60" stroke-width="1" />
+      
+      <!-- Building Middle -->
+      <rect x="-50" y="20" width="100" height="40" fill="#ffffff" />
+      <path d="M-50,30 h100 M-50,40 h100 M-50,50 h100" stroke-width="1" />
+      <path d="M-40,20 v40 M-30,20 v40 M-20,20 v40 M-10,20 v40 M0,20 v40 M10,20 v40 M20,20 v40 M30,20 v40 M40,20 v40" stroke-width="1" />
+      
+      <!-- Building Right -->
+      <rect x="50" y="0" width="60" height="60" fill="#ffffff" />
+      <path d="M50,10 h60 M50,20 h60 M50,30 h60 M50,40 h60 M50,50 h60" stroke-width="1" />
+      <path d="M60,0 v60 M70,0 v60 M80,0 v60 M90,0 v60 M100,0 v60" stroke-width="1" />
+      
+      <!-- Open Book -->
+      <path d="M -40,90 L 0,110 L 40,90 L 40,110 L 0,130 L -40,110 Z" fill="#ffffff" />
+      <path d="M 0,110 L 0,70" />
+      <path d="M -40,90 L -40,70 Q -20,60 0,70 Q 20,60 40,70 L 40,90" />
+    </g>
+    
+    <!-- Leaves -->
+    <path d="M -130,20 C -150,80 -80,140 0,140" fill="none" stroke="#ff0000" stroke-width="4" />
+    <path d="M 130,20 C 150,80 80,140 0,140" fill="none" stroke="#ff0000" stroke-width="4" />
+    <path d="M -110,40 L -120,30 M -95,70 L -115,55 M -70,95 L -95,85 M -40,115 L -60,110 M -10,130 L -25,125" stroke="#ff0000" stroke-width="3" />
+    <path d="M 110,40 L 120,30 M 95,70 L 115,55 M 70,95 L 95,85 M 40,115 L 60,110 M 10,130 L 25,125" stroke="#ff0000" stroke-width="3" />
+    
+    <!-- Diamonds -->
+    <polygon points="-160,160 -150,140 -160,120 -170,140" fill="#ff0000" />
+    <polygon points="160,160 150,140 160,120 170,140" fill="#ff0000" />
+  </g>
+  
+  <!-- Footer text -->
+  <g transform="translate(512, 850)" fill="#444444" font-family="Arial, sans-serif" font-weight="bold" text-anchor="middle">
+    <text y="0" font-size="28">DÉVELOPPÉ PAR</text>
+    <text y="40" font-size="32">MUCOWINTORE AIMÉ-BONUS</text>
+  </g>
+</svg>

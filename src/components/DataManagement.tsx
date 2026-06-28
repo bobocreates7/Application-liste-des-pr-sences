@@ -4,6 +4,7 @@ import { Users, Plus, Trash2, ClipboardPaste, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { UserRole } from './PortalSelect';
+import { Select } from './Select';
 
 interface DataManagementProps {
   classes: Class[];
@@ -126,15 +127,11 @@ export default function DataManagement({ classes, students, onAddStudents, onDel
             <div className="p-4 border-b md:border-b-0 md:border-r border-gray-100 dark:border-gray-800 md:w-1/2 flex flex-col gap-3 shrink-0 md:overflow-y-auto">
               <div>
                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Classe</label>
-                <select 
+                <Select 
                   value={selectedClassId}
-                  onChange={(e) => setSelectedClassId(e.target.value)}
-                  className="w-full border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                >
-                  {classes.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
+                  onChange={setSelectedClassId}
+                  options={classes.map(c => ({ value: c.id, label: c.name }))}
+                />
               </div>
 
               <div className="flex-1 flex flex-col">
@@ -186,15 +183,11 @@ export default function DataManagement({ classes, students, onAddStudents, onDel
           <div className={`p-4 ${role === 'prefet' ? 'md:w-1/2' : 'w-full'} flex flex-col bg-gray-50 dark:bg-gray-900 md:overflow-hidden`}>
             {role === 'prof' && (
               <div className="mb-4">
-                <select 
+                <Select 
                   value={selectedClassId}
-                  onChange={(e) => setSelectedClassId(e.target.value)}
-                  className="w-full border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                >
-                  {classes.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
+                  onChange={setSelectedClassId}
+                  options={classes.map(c => ({ value: c.id, label: c.name }))}
+                />
               </div>
             )}
             

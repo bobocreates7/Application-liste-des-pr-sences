@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
-import { CheckCircle2, Check, Bell } from 'lucide-react';
+import { useMemo, useState, useEffect } from 'react';
+import { CheckCircle2, Check, Bell, Trash2 } from 'lucide-react';
 import { Class, DailyAttendance } from '../types';
 import { getLocalYMD } from '../App';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface NotificationsProps {
   classes: Class[];
@@ -11,6 +12,15 @@ interface NotificationsProps {
 }
 
 export default function Notifications({ classes, attendances, onDateChange, onClose }: NotificationsProps) {
+  const [dismissedAlerts, setDismissedAlerts] = useState<string[]>(() => {
+    const saved = localStorage.getItem('app_dismissed_alerts');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('app_dismissed_alerts', JSON.stringify(dismissedAlerts));
+  }, [dismissedAlerts]);
+
   const recentWorkingDays = useMemo(() => {
     const dates = [];
     
@@ -76,8 +86,8 @@ export default function Notifications({ classes, attendances, onDateChange, onCl
         isComplete: pendingCount === 0,
         lastCompletedAt
       };
-    });
-  }, [recentWorkingDays, classes, attendances]);
+    }).filter(item => !dismissedAlerts.includes(item.date));
+  }, [recentWorkingDays, classes, attendances, dismissedAlerts]);
 
   const missedDaysCount = notificationItems.filter(item => {
     if (item.isComplete) return false;
@@ -88,6 +98,10 @@ export default function Notifications({ classes, attendances, onDateChange, onCl
     }
     return true;
   }).length;
+
+  const handleDismiss = (date: string) => {
+    setDismissedAlerts(prev => [...prev, date]);
+  };
 
   return (
     <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 flex-1">
@@ -105,37 +119,60 @@ export default function Notifications({ classes, attendances, onDateChange, onCl
            </div>
         ) : (
           <div className="space-y-3">
+            <AnimatePresence>
             {notificationItems.map(item => (
-              <button
+              <motion.div
                 key={item.date}
-                onClick={() => {
-                  onDateChange(item.date);
-                  onClose(); // This should be setActiveTab('home')
-                }}
-                className={`w-full text-left p-4 bg-white dark:bg-gray-800 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600 rounded-xl flex flex-col gap-1.5 transition-colors border ${!item.isComplete ? 'border-red-100 dark:border-red-900/30 bg-red-50/20 dark:bg-red-900/10' : 'border-gray-100 dark:border-gray-700'}`}
+                layout
+                initial={{ opacity: 0, height: 0, scale: 0.9 }}
+                animate={{ opacity: 1, height: 'auto', scale: 1 }}
+                exit={{ opacity: 0, height: 0, scale: 0.9, padding: 0, margin: 0 }}
+                transition={{ duration: 0.2 }}
+                className="relative rounded-xl overflow-hidden"
               >
-                <div className="flex justify-between items-center w-full">
-                  <span className="font-bold text-gray-900 dark:text-white text-base capitalize">{item.formattedDate}</span>
-                  {item.isComplete ? (
-                    <Check className="w-5 h-5 text-green-500 dark:text-green-400" />
-                  ) : (
-                    <span className="text-xs uppercase font-bold text-red-600 dark:text-red-400 tracking-wider bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded-md">
-                      {item.pendingCount} manquant(s)
-                    </span>
-                  )}
+                <div className="absolute inset-0 bg-red-500 flex items-center justify-end px-6">
+                   <Trash2 className="text-white w-6 h-6" />
                 </div>
-                {item.isComplete ? (
-                  <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
-                    <CheckCircle2 className="w-4 h-4 text-green-500 dark:text-green-400" />
-                    Appels effectués {item.lastCompletedAt ? `le ${new Date(item.lastCompletedAt).toLocaleDateString('fr-FR')} à ${new Date(item.lastCompletedAt).toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'})}` : ''}
+                <motion.button
+                  drag="x"
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={{ left: 0.5, right: 0 }}
+                  onDragEnd={(e, { offset, velocity }) => {
+                    const swipe = offset.x;
+                    if (swipe < -100) {
+                      handleDismiss(item.date);
+                    }
+                  }}
+                  onClick={() => {
+                    onDateChange(item.date);
+                    onClose(); // This should be setActiveTab('home')
+                  }}
+                  className={`relative w-full text-left p-4 bg-white dark:bg-gray-800 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600 rounded-xl flex flex-col gap-1.5 transition-colors border ${!item.isComplete ? 'border-red-100 dark:border-red-900/30 bg-red-50/20 dark:bg-red-900/10' : 'border-gray-100 dark:border-gray-700'}`}
+                >
+                  <div className="flex justify-between items-center w-full">
+                    <span className="font-bold text-gray-900 dark:text-white text-base capitalize">{item.formattedDate}</span>
+                    {item.isComplete ? (
+                      <Check className="w-5 h-5 text-green-500 dark:text-green-400" />
+                    ) : (
+                      <span className="text-xs uppercase font-bold text-red-600 dark:text-red-400 tracking-wider bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded-md">
+                        {item.pendingCount} manquant(s)
+                      </span>
+                    )}
                   </div>
-                ) : (
-                  <div className="text-xs text-red-500/80 dark:text-red-400/80 mt-1">
-                    Veuillez compléter tous les appels pour cette journée. Appuyez ici pour y aller.
-                  </div>
-                )}
-              </button>
+                  {item.isComplete ? (
+                    <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
+                      <CheckCircle2 className="w-4 h-4 text-green-500 dark:text-green-400" />
+                      Appels effectués {item.lastCompletedAt ? `le ${new Date(item.lastCompletedAt).toLocaleDateString('fr-FR')} à ${new Date(item.lastCompletedAt).toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'})}` : ''}
+                    </div>
+                  ) : (
+                    <div className="text-xs text-red-500/80 dark:text-red-400/80 mt-1">
+                      Veuillez compléter tous les appels pour cette journée. Appuyez ici pour y aller.
+                    </div>
+                  )}
+                </motion.button>
+              </motion.div>
             ))}
+            </AnimatePresence>
           </div>
         )}
       </main>
