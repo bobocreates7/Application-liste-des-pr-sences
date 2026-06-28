@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Moon, Sun, Mail, Info, LogOut } from 'lucide-react';
+import { X, Moon, Sun, Mail, Info, LogOut, Calendar } from 'lucide-react';
 import { UserRole } from './PortalSelect';
+import { Select } from './Select';
 
 interface SideMenuProps {
   isOpen: boolean;
@@ -9,11 +10,14 @@ interface SideMenuProps {
   toggleDarkMode: () => void;
   role?: UserRole | null;
   userEmail?: string | null;
+  schoolYear?: string;
+  availableSchoolYears?: string[];
+  onSchoolYearChange?: (year: string) => void;
   onLogout: () => void;
   onAppLogout?: () => void;
 }
 
-export default function SideMenu({ isOpen, onClose, isDarkMode, toggleDarkMode, role, userEmail, onLogout, onAppLogout }: SideMenuProps) {
+export default function SideMenu({ isOpen, onClose, isDarkMode, toggleDarkMode, role, userEmail, schoolYear, availableSchoolYears = [], onSchoolYearChange, onLogout, onAppLogout }: SideMenuProps) {
   // Optionnel: ajout du geste swipe à droite pour fermer plus tard,
   // mais la consigne demande un swipe gauche pour ouvrir (ce qui doit être géré au niveau app),
   // et on peut glisser à droite pour fermer le menu.
@@ -58,6 +62,22 @@ export default function SideMenu({ isOpen, onClose, isDarkMode, toggleDarkMode, 
               <div className="flex flex-col gap-2">
                 <p className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1 px-1">Session</p>
                 
+                <div className="bg-white dark:bg-gray-800/80 rounded-2xl p-4 mb-1 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-100 dark:border-gray-700/50 flex flex-col gap-2">
+                  <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300 mb-1">
+                    <Calendar className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                    <span className="text-[14px] font-semibold">Année Scolaire</span>
+                  </div>
+                  <Select
+                    value={schoolYear || ""}
+                    onChange={(val) => onSchoolYearChange?.(val)}
+                    options={availableSchoolYears.map((year, index) => ({
+                      value: year,
+                      label: index === 0 ? `${year} (En cours)` : year
+                    }))}
+                    className="w-full relative z-50"
+                  />
+                </div>
+
                 {userEmail && (
                   <div className="bg-white dark:bg-gray-800/80 rounded-2xl p-4 mb-1 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-100 dark:border-gray-700/50 flex items-center gap-3">
                     <Mail className="w-5 h-5 text-gray-400 dark:text-gray-500" />

@@ -41,7 +41,7 @@ export function Select({ options, value, onChange, placeholder = "Sélectionner.
         type="button"
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
-        className={twMerge(`w-full flex items-center justify-between gap-2 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors text-sm font-medium ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`, buttonClassName)}
+        className={twMerge(`w-full flex items-center justify-between gap-2 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors text-sm font-medium text-gray-900 dark:text-white ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`, buttonClassName)}
       >
         <span className={selectedOption ? '' : 'opacity-70'}>
           {selectedOption ? selectedOption.label : placeholder}

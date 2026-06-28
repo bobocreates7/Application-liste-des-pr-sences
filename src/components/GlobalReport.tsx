@@ -92,15 +92,32 @@ export default function GlobalReport({
     doc: jsPDF,
     fileName: string,
     shareTitle: string,
-    shareText: string
+    shareText: string,
+    subfolder: string = "Général"
   ) => {
     if (Capacitor.isNativePlatform()) {
       const pdfBase64 = doc.output("datauristring").split(",")[1];
+      
+      const folderPath = `Rapports/${subfolder.replace(/\//g, "-")}`;
+      
+      try {
+        await Filesystem.mkdir({
+          path: folderPath,
+          directory: Directory.Documents,
+          recursive: true,
+        });
+      } catch (e) {
+        // Directory might already exist, ignore error
+      }
+      
+      const filePath = `${folderPath}/${fileName}`;
+      
       const savedFile = await Filesystem.writeFile({
-        path: fileName,
+        path: filePath,
         data: pdfBase64,
-        directory: Directory.Cache,
+        directory: Directory.Documents,
       });
+      
       try {
         await Share.share({
           title: shareTitle,
@@ -109,11 +126,15 @@ export default function GlobalReport({
           dialogTitle: "Enregistrer ou partager le rapport PDF",
         });
         toast.success("Export réussi", {
-          description: "Le rapport PDF a été généré.",
+          description: `Le rapport a été sauvegardé dans Documents/${folderPath}`,
           icon: <Download className="w-4 h-4" />,
         });
       } catch (shareError: any) {
         if (shareError?.message !== "Share canceled") throw shareError;
+        toast.success("Export réussi", {
+          description: `Le rapport a été sauvegardé dans Documents/${folderPath}`,
+          icon: <Download className="w-4 h-4" />,
+        });
       }
     } else {
       const blob = doc.output("blob");
@@ -213,12 +234,15 @@ export default function GlobalReport({
         styles: { fontSize: 11, cellPadding: 4 },
       });
 
+      const folderName = selectedClassFilter === "all" ? "Toutes les classes" : (classes.find(c => c.id === selectedClassFilter)?.name || "Général");
+      
       const fileName = `rapport-absences-${currentDate}.pdf`;
       await savePdf(
         doc,
         fileName,
         "Rapport d'absences",
-        `Rapport d'absences du ${formattedDate}`
+        `Rapport d'absences du ${formattedDate}`,
+        folderName
       );
     } catch (error: any) {
       console.error("Erreur lors de l'export PDF:", error);
@@ -375,12 +399,14 @@ export default function GlobalReport({
       });
 
       const className = targetClasses[0]?.name.replace(/ /g, "_") || "classe";
+      const folderName = targetClasses[0]?.name || "Général";
       const fileName = `presences-${className}-${selectedMonth}.pdf`;
       await savePdf(
         doc,
         fileName,
         "Rapport mensuel",
-        `Rapport de présences du mois ${monthName}`
+        `Rapport de présences du mois ${monthName}`,
+        folderName
       );
     } catch (error: any) {
       console.error("Erreur lors de l'export PDF:", error);
@@ -431,7 +457,7 @@ export default function GlobalReport({
                 { value: "all", label: "Toutes les classes" },
                 ...classes.map(c => ({ value: c.id, label: c.name }))
               ]}
-              className="!bg-white/10 !border-none !text-white text-sm"
+              buttonClassName="bg-white/20 hover:bg-white/30 text-white border-none shadow-none font-medium"
             />
           </div>
 

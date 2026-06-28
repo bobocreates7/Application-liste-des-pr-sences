@@ -23,6 +23,7 @@ import { NotificationService } from "./services/notificationService";
 import PortalSelect, { UserRole } from "./components/PortalSelect";
 import AuthScreen from "./components/AuthScreen";
 import { Trimester, getTrimesterFromDate } from './utils/trimester';
+import { getSchoolYearFromDate, getCurrentSchoolYear } from './utils/schoolYear';
 
 // Firebase imports
 import {
@@ -66,6 +67,7 @@ export default function App() {
     getValidSchoolDate()
   );
   const [activeTrimester, setActiveTrimester] = useState<Trimester>(() => getTrimesterFromDate(getValidSchoolDate()));
+  const [schoolYear, setSchoolYear] = useState<string>(() => localStorage.getItem("app_school_year") || getCurrentSchoolYear());
   const [selectedClassId, setSelectedClassId] = useState<string | null>(() =>
     localStorage.getItem("app_selected_class")
   );
@@ -86,6 +88,12 @@ export default function App() {
   const filteredAttendances = useMemo(() => {
     return attendances.filter(a => getTrimesterFromDate(a.date) === activeTrimester);
   }, [attendances, activeTrimester]);
+
+  const availableSchoolYears = useMemo(() => {
+    const years = new Set(attendances.map(a => getSchoolYearFromDate(a.date)));
+    years.add(getCurrentSchoolYear()); // Always include current year
+    return Array.from(years).sort().reverse();
+  }, [attendances]);
 
   // Initialize StatusBar and BackButton
   useEffect(() => {
@@ -604,6 +612,12 @@ export default function App() {
         toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
         role={role}
         userEmail={userEmail}
+        schoolYear={schoolYear}
+        availableSchoolYears={availableSchoolYears}
+        onSchoolYearChange={(year) => {
+          setSchoolYear(year);
+          localStorage.setItem("app_school_year", year);
+        }}
         onLogout={handleLogout}
         onAppLogout={handleAppLogout}
       />
