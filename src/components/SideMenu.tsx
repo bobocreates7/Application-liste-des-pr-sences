@@ -59,6 +59,13 @@ export default function SideMenu({ isOpen, onClose, isDarkMode, toggleDarkMode, 
             </div>
 
             <div className="flex-1 p-4 flex flex-col gap-6 overflow-y-auto">
+              {userEmail && (
+                <div className="bg-white dark:bg-gray-800/80 rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-100 dark:border-gray-700/50 flex items-center gap-3">
+                  <Mail className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                  <span className="text-[14px] text-gray-700 dark:text-gray-300 font-medium truncate">{userEmail}</span>
+                </div>
+              )}
+
               <div className="flex flex-col gap-2">
                 <p className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1 px-1">Session</p>
                 
@@ -77,13 +84,6 @@ export default function SideMenu({ isOpen, onClose, isDarkMode, toggleDarkMode, 
                     className="w-full relative z-50"
                   />
                 </div>
-
-                {userEmail && (
-                  <div className="bg-white dark:bg-gray-800/80 rounded-2xl p-4 mb-1 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-100 dark:border-gray-700/50 flex items-center gap-3">
-                    <Mail className="w-5 h-5 text-gray-400 dark:text-gray-500" />
-                    <span className="text-[14px] text-gray-700 dark:text-gray-300 font-medium truncate">{userEmail}</span>
-                  </div>
-                )}
 
                 <div className="bg-white dark:bg-gray-800/80 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-100 dark:border-gray-700/50">
                   <button 

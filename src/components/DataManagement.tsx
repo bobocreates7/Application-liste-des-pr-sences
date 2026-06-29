@@ -1,16 +1,18 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Class, Student } from '../types';
 import { Users, Plus, Trash2, ClipboardPaste, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { UserRole } from './PortalSelect';
 import { Select } from './Select';
+import { App as CapacitorApp } from '@capacitor/app';
 
 interface DataManagementProps {
   classes: Class[];
   students: Student[];
   onAddStudents: (students: Student[]) => void;
   onDeleteStudent: (studentId: string) => void;
+  onDeleteStudents?: (studentIds: string[]) => void;
   role: UserRole;
 }
 
@@ -20,10 +22,44 @@ const generateId = () => {
     : Math.random().toString(36).substring(2, 15);
 };
 
-export default function DataManagement({ classes, students, onAddStudents, onDeleteStudent, role }: DataManagementProps) {
+export default function DataManagement({ classes, students, onAddStudents, onDeleteStudent, onDeleteStudents, role }: DataManagementProps) {
   const [selectedClassId, setSelectedClassId] = useState<string>(classes[0]?.id || '');
   const [bulkText, setBulkText] = useState('');
+  const [selectedForDeletion, setSelectedForDeletion] = useState<Set<string>>(new Set());
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const longPressTimerRef = useRef<number | null>(null);
+
+  const handleTouchStart = (studentId: string) => {
+    if (role !== 'prefet' || isSelectionMode) return;
+    longPressTimerRef.current = window.setTimeout(() => {
+      setIsSelectionMode(true);
+      setSelectedForDeletion(new Set([studentId]));
+      // Vibrate to provide feedback if available
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+    }, 500);
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimerRef.current) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    if (isSelectionMode) {
+      const listener = CapacitorApp.addListener('backButton', () => {
+        setIsSelectionMode(false);
+        setSelectedForDeletion(new Set());
+      });
+      return () => {
+        listener.then(l => l.remove());
+      };
+    }
+  }, [isSelectionMode]);
 
   const classStudents = students
     .filter(s => s.classId === selectedClassId)
@@ -192,10 +228,45 @@ export default function DataManagement({ classes, students, onAddStudents, onDel
             )}
             
             <h3 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2.5 flex justify-between items-center shrink-0">
-              <span>Élèves dans cette classe</span>
-              <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 py-0.5 px-2 rounded-full text-[10px] font-bold">
-                {classStudents.length}
-              </span>
+              <div className="flex items-center gap-2">
+                <span>Élèves dans cette classe</span>
+                {role === 'prefet' && isSelectionMode && classStudents.length > 0 && (
+                  <>
+                    <button
+                      onClick={() => {
+                        if (selectedForDeletion.size === classStudents.length) {
+                          setSelectedForDeletion(new Set());
+                        } else {
+                          setSelectedForDeletion(new Set(classStudents.map(s => s.id)));
+                        }
+                      }}
+                      className="text-[10px] text-blue-600 dark:text-blue-400 font-medium hover:underline"
+                    >
+                      {selectedForDeletion.size === classStudents.length ? "Tout désélectionner" : "Tout sélectionner"}
+                    </button>
+                  </>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {role === 'prefet' && isSelectionMode && selectedForDeletion.size > 0 && (
+                  <button
+                    onClick={() => {
+                      if (onDeleteStudents) {
+                        onDeleteStudents(Array.from(selectedForDeletion));
+                        setSelectedForDeletion(new Set());
+                        setIsSelectionMode(false);
+                      }
+                    }}
+                    className="flex items-center gap-1 bg-red-100 hover:bg-red-200 text-red-700 py-0.5 px-2 rounded-md text-[10px] font-bold transition-colors"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    Supprimer ({selectedForDeletion.size})
+                  </button>
+                )}
+                <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 py-0.5 px-2 rounded-full text-[10px] font-bold">
+                  {classStudents.length}
+                </span>
+              </div>
             </h3>
             
             <div className="flex-1 overflow-y-auto space-y-1.5 pr-1">
@@ -207,14 +278,50 @@ export default function DataManagement({ classes, students, onAddStudents, onDel
                 </div>
               ) : (
                 classStudents.map((student, index) => (
-                  <div key={student.id} className="flex items-center justify-between bg-white dark:bg-gray-800 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm">
-                    <span className="font-medium text-gray-900 dark:text-white text-sm">
-                      <span className="text-gray-500 mr-1">{index + 1}.</span>{student.lastName.toUpperCase()} <span className="text-gray-600 dark:text-gray-400 font-normal">{student.firstName}</span>
-                    </span>
-                    {role === 'prefet' && (
+                  <div 
+                    key={student.id} 
+                    className={`flex items-center justify-between p-2.5 rounded-lg border shadow-sm select-none transition-colors ${
+                      isSelectionMode && selectedForDeletion.has(student.id) 
+                        ? "bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800" 
+                        : "bg-white border-gray-100 dark:bg-gray-800 dark:border-gray-700"
+                    }`}
+                    onTouchStart={() => handleTouchStart(student.id)}
+                    onTouchEnd={handleTouchEnd}
+                    onTouchMove={handleTouchEnd}
+                    onMouseDown={() => handleTouchStart(student.id)}
+                    onMouseUp={handleTouchEnd}
+                    onMouseLeave={handleTouchEnd}
+                    onClick={() => {
+                      if (isSelectionMode) {
+                        const newSet = new Set(selectedForDeletion);
+                        if (newSet.has(student.id)) newSet.delete(student.id);
+                        else newSet.add(student.id);
+                        setSelectedForDeletion(newSet);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      {role === 'prefet' && isSelectionMode && (
+                        <input 
+                          type="checkbox"
+                          checked={selectedForDeletion.has(student.id)}
+                          onChange={(e) => {
+                            // Handled by parent div onClick
+                          }}
+                          className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 pointer-events-none"
+                        />
+                      )}
+                      <span className="font-medium text-gray-900 dark:text-white text-sm">
+                        <span className="text-gray-500 mr-1">{index + 1}.</span>{student.lastName.toUpperCase()} <span className="text-gray-600 dark:text-gray-400 font-normal">{student.firstName}</span>
+                      </span>
+                    </div>
+                    {role === 'prefet' && !isSelectionMode && (
                       <button 
-                        onClick={() => onDeleteStudent(student.id)}
-                        className="text-gray-400 hover:text-red-500 p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteStudent(student.id);
+                        }}
+                        className="text-gray-400 hover:text-red-500 p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors shrink-0"
                         title="Supprimer l'élève"
                       >
                         <Trash2 className="w-3.5 h-3.5" />

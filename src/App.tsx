@@ -500,6 +500,22 @@ export default function App() {
     }
   };
 
+  const handleDeleteStudents = async (studentIds: string[]) => {
+    if (!schoolUid) return;
+    try {
+      const batch = writeBatch(db);
+      studentIds.forEach(id => {
+        const studentRef = doc(db, "schools", schoolUid, "students", id);
+        batch.delete(studentRef);
+      });
+      await batch.commit();
+      toast.success(`${studentIds.length} élève(s) supprimé(s)`);
+    } catch (e) {
+      console.error(e);
+      toast.error("Erreur lors de la suppression");
+    }
+  };
+
   const getUncompletedCount = () => {
     let missedDays = 0;
 
@@ -678,6 +694,7 @@ export default function App() {
                     students={students}
                     onAddStudents={handleAddStudents}
                     onDeleteStudent={handleDeleteStudent}
+                    onDeleteStudents={handleDeleteStudents}
                     role={role}
                   />
                 )}

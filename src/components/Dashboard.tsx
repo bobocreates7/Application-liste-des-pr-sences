@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useLayoutEffect } from 'react';
-import { Search, MapPin, CheckCircle2, Circle, Calendar as CalendarIcon, Menu, X, Folder } from 'lucide-react';
+import { Search, CheckCircle2, Circle, Calendar as CalendarIcon, Menu, X, Folder } from 'lucide-react';
 import { Class, DailyAttendance, Student } from '../types';
 import { UserRole } from './PortalSelect';
 import { Select } from './Select';
@@ -187,10 +187,6 @@ export default function Dashboard({
               >
               <div>
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white">{c.name}</h2>
-                <div className="flex items-center text-gray-500 dark:text-gray-400 mt-0.5">
-                  <MapPin className="w-3.5 h-3.5 mr-1" />
-                  <span className="text-xs">{c.building}</span>
-                </div>
               </div>
               
               <div className="flex items-center gap-2">

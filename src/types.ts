@@ -1,7 +1,6 @@
 export interface Class {
   id: string;
   name: string;
-  building: string;
 }
 
 export interface Student {
