@@ -35,8 +35,6 @@ jobs:
     - name: Bypass - Fix Corrupted Gradle Wrapper
       run: |
         cd android
-        rm -f gradle/wrapper/gradle-wrapper.jar
-        gradle wrapper
         chmod +x gradlew
 
     - name: Build with Gradle
